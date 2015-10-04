@@ -20,7 +20,8 @@
             android:weightSum="1">
             <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="108dp">
+                android:layout_height="108dp"
+                android:layout_weight="0.21">
 
 
                 <TableRow
@@ -51,7 +52,7 @@
                         android:layout_alignLeft="@+id/fpsField"
                         android:layout_alignStart="@+id/fpsField"
                         android:gravity="right"
-                        android:layout_column="2"
+                        android:layout_column="1"
                         android:layout_weight="1" />
 
                 </TableRow>
@@ -82,10 +83,45 @@
                         android:layout_alignLeft="@+id/button_flash"
                         android:layout_alignStart="@+id/button_flash"
                         android:textColor="#FFFFFF"
-                        android:text="20"
-                        android:layout_column="2"
+                        android:text="5"
+                        android:layout_column="1"
                         android:layout_weight="1"
                         android:gravity="right" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="Note: Camera might not be able to handle many flashes / second"
+                        android:id="@+id/textView3"
+                        android:layout_column="1"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:layout_weight="1" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"></TableRow>
+
+                <TableRow
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:id="@+id/encodedMsg"
+                        android:layout_column="1"
+                        android:gravity="center"
+                        android:textColor="#FFFFFF"
+                        android:layout_weight="1" />
                 </TableRow>
 
             </TableLayout>
@@ -127,7 +163,7 @@
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.14">
+                android:layout_weight="0.49">
 
                 <Button
                     android:layout_width="wrap_content"
@@ -138,8 +174,20 @@
                     android:textColor="#FFFFFF"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
+                    android:layout_toLeftOf="@+id/button"
+                    android:layout_toStartOf="@+id/button" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Set Max speed"
+                    android:id="@+id/button"
+                    android:onClick="setMaxSpeed"
+                    android:layout_alignBottom="@+id/button_flash"
                     android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true" />
+                    android:layout_alignParentEnd="true"
+                    android:textColor="#FFFFFF" />
+
             </RelativeLayout>
 
 

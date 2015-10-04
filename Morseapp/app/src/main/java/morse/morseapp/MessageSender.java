@@ -21,7 +21,7 @@ public class MessageSender extends Thread {
 
     private boolean sending_message = false;
 
-    Map<String, String> code = new HashMap<String, String>();
+    static Map<String, String> code = new HashMap<String, String>();
 
     public static enum Mode {
         DOT_IS_SHORT_FLASH, DOT_IS_OFF
@@ -30,50 +30,51 @@ public class MessageSender extends Thread {
     Mode morseMode;
 
     public MessageSender() {
-        code.put("a", ".-.-");
-        code.put("b", ".--.");
-        code.put("c", ".---");
-        code.put("d", "...-");
-        code.put("e", "--.-");
-        code.put("f", "-.-.");
-        code.put("g", ".-.-.-");
-        code.put("h", ".-.-.--");
-        code.put("i", ".-.-.-..-");
-        code.put("j", ".-.-.--.-");
-        code.put("k", ".-.-.--");
-        code.put("k", ".-.-.--");
-        code.put("l", "-.-.");
-        code.put("m", ".-.-.-");
-        code.put("n", ".-.--");
-        code.put("o", ".-.-.--");
-        code.put("p", ".-.--");
-        code.put("q", ".-.-.--");
-        code.put("r", ".-.--");
-        code.put("s", "-.-.");
-        code.put("t", ".-.-.-");
-        code.put("u", ".-.---");
-        code.put("v", ".-.-.-");
-        code.put("x", "..-.-");
-        code.put("z", ".--");
-        code.put("w", ".-.--");
-        code.put(" ", ".-.--");
+        code.put("a", "-....-");
+        code.put("b", "-.....");
+        code.put("c", ".-....");
+        code.put("d", "--....");
+        code.put("e", "..-...");
+        code.put("f", "-.-...");
+        code.put("g", ".--...");
+        code.put("h", "---...");
+        code.put("i", "...-..");
+        code.put("j", "-..-..");
+        code.put("k", "--.-..");
+        code.put("k", "-.--..");
+        code.put("l", "----..");
+        code.put("m", "....-.");
+        code.put("n", "-...-.");
+        code.put("o", "--..-.");
+        code.put("p", "---.-.");
+        code.put("q", "-.---.");
+        code.put("r", "--.--.");
+        code.put("s", "-----.");
+        code.put("t", "-.-.-.");
+        code.put("u", ".----.");
+        code.put("v", "-.-.-.");
+        code.put("x", ".....-");
+        code.put("z", "....--");
+        code.put("w", "...---");
+        code.put(" ", "..---");
     }
     @Override
     public void run () {
         params = MainActivity.cam.getParameters();
         try {
+            Log.i("MORSE", "Current Unit length: " + Integer.toString((1000 / FPS) * 1));
             for (char c : msg.toCharArray()) {
 
                 if(morseMode == Mode.DOT_IS_SHORT_FLASH) {
                     if (c == '.') {
-                        turnOn();
+                        MainActivity.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
-                        turnOff();
+                        MainActivity.turnOff();
 
                     } else if (c == '-') {
-                        turnOn();
+                        MainActivity.turnOn();
                         Thread.sleep((1000 / FPS) * 3);
-                        turnOff();
+                        MainActivity.turnOff();
                     }
 
                     // wait between characters so we can distinguish different chars
@@ -82,19 +83,19 @@ public class MessageSender extends Thread {
                 } else {
                     if (c == '.') {
                         if(flash_on)
-                            turnOff();
-                        Thread.sleep((1000 / FPS) * 1);
+                            MainActivity.turnOff();
+                        Thread.sleep(((1000 / FPS) * 1));
                         flash_on = false;
 
                     } else if (c == '-') {
                         if(!flash_on)
-                            turnOn();
+                            MainActivity.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
                         flash_on = true;
                     }
                 }
             }
-            turnOff();
+            MainActivity.turnOff();
             sending_message = false;
         } catch (Exception e) {
             Log.e("MORSE", "Error: " + e.toString());
@@ -116,22 +117,16 @@ public class MessageSender extends Thread {
         this.run();
     }
 
-    public String convertToMorse(String message) {
+    public static String convertToMorse(String message) {
         String morseMsg = "";
         for(char c : message.toCharArray()) {
             String morseChar = Character.toString(c);
             if(morseChar != null)
                 morseMsg += code.get(morseChar);
         }
+
+        Log.i("MORSE", "Morse String: " + morseMsg);
         return morseMsg;
     }
-    public void turnOff() {
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        MainActivity.cam.setParameters(params);
-    }
 
-    public void turnOn() {
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-        MainActivity.cam.setParameters(params);
-    }
 }
