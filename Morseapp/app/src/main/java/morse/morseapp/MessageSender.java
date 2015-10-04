@@ -14,11 +14,9 @@ public class MessageSender extends Thread {
     private String msg;
     private Camera.Parameters params;
 
+    private Mode morseMode;
     private int FPS = 10;
-
-    private boolean short_is_none = true;
     private boolean flash_on = false;
-
     private boolean sending_message = false;
 
     static Map<String, String> code = new HashMap<String, String>();
@@ -27,7 +25,7 @@ public class MessageSender extends Thread {
         DOT_IS_SHORT_FLASH, DOT_IS_OFF
     }
 
-    Mode morseMode;
+
 
     public MessageSender() {
         code.put("a", "-....-");
@@ -59,46 +57,46 @@ public class MessageSender extends Thread {
         code.put(" ", "..---");
     }
     @Override
-    public void run () {
+    public void run() {
         params = MainActivity.cam.getParameters();
         try {
-            Log.i("MORSE", "Current Unit length: " + Integer.toString((1000 / FPS) * 1));
+            Log.i(MainActivity.APP_TAG, "Current Unit length: " + Integer.toString((1000 / FPS) * 1));
             for (char c : msg.toCharArray()) {
 
                 if(morseMode == Mode.DOT_IS_SHORT_FLASH) {
                     if (c == '.') {
-                        MainActivity.turnOn();
+                        MainActivity.turnCameraOn();
                         Thread.sleep((1000 / FPS) * 1);
-                        MainActivity.turnOff();
+                        MainActivity.turnCameraOff();
 
                     } else if (c == '-') {
-                        MainActivity.turnOn();
+                        MainActivity.turnCameraOn();
                         Thread.sleep((1000 / FPS) * 3);
-                        MainActivity.turnOff();
+                        MainActivity.turnCameraOff();
                     }
 
                     // wait between characters so we can distinguish different chars
                     Thread.sleep((1000 / FPS) * 2);
 
-                } else {
+                } else if (morseMode == Mode.DOT_IS_OFF){
                     if (c == '.') {
                         if(flash_on)
-                            MainActivity.turnOff();
+                            MainActivity.turnCameraOff();
                         Thread.sleep(((1000 / FPS) * 1));
                         flash_on = false;
 
                     } else if (c == '-') {
                         if(!flash_on)
-                            MainActivity.turnOn();
+                            MainActivity.turnCameraOn();
                         Thread.sleep((1000 / FPS) * 1);
                         flash_on = true;
                     }
                 }
             }
-            MainActivity.turnOff();
+            MainActivity.turnCameraOff();
             sending_message = false;
         } catch (Exception e) {
-            Log.e("MORSE", "Error: " + e.toString());
+            Log.e(MainActivity.APP_TAG, "Error: " + e.toString());
             sending_message = false;
         }
     }
@@ -114,7 +112,7 @@ public class MessageSender extends Thread {
         this.FPS = FPS;
         this.msg = convertToMorse(message);
 
-        this.run();
+        this.start();
     }
 
     public static String convertToMorse(String message) {
@@ -125,8 +123,12 @@ public class MessageSender extends Thread {
                 morseMsg += code.get(morseChar);
         }
 
-        Log.i("MORSE", "Morse String: " + morseMsg);
+        Log.i(MainActivity.APP_TAG, "Morse String: " + morseMsg);
         return morseMsg;
+    }
+
+    public boolean isSendingMessage() {
+        return sending_message;
     }
 
 }

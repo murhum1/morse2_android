@@ -20,22 +20,30 @@ import morse.morseapp.MessageSender.Mode;
 
 public class MainActivity extends Activity {
 
+    static String APP_TAG = "MORSEAPP";
+
     static Camera cam;
     static Camera.Parameters params;
 
-    MessageSender msgSender;
+    private MessageSender msgSender;
 
-    public MainActivity() {
-        msgSender = new MessageSender();
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initMessageField();
+
+        msgSender = new MessageSender();
     }
 
     public void sendMessage(View view) {
+
+        // Let's not interrupt if it's sending a message
+        if(msgSender.isSendingMessage())
+            return;
+
+        // MessageSender extends Thread so we need to recreate it
+        msgSender = new MessageSender();
 
         String message = ((EditText) findViewById(R.id.messageField)).getText().toString();
         int fps = Integer.parseInt(((EditText) findViewById(R.id.fpsField)).getText().toString());
@@ -53,19 +61,20 @@ public class MainActivity extends Activity {
 
         for(int i = 0; i < 5; i++) {
             long startTime = System.currentTimeMillis();
-            turnOn();
+            turnCameraOn();
             long endTime = System.currentTimeMillis();
-            turnOff();
+            turnCameraOff();
 
             speeds.add(1000 / (endTime - startTime));
         }
 
-        // Select the minimun FPS. It's the max speed
+        // Select the minimum FPS. It's the max speed
         speed = Long.toString(Collections.min(speeds));
 
         ((EditText) findViewById(R.id.fpsField)).setText(speed);
     }
 
+    // Sets the encoded message to the encodedMsg field
     public void messageChanged() {
         String message = ((EditText) findViewById(R.id.messageField)).getText().toString();
         ((TextView) findViewById(R.id.encodedMsg)).setText(MessageSender.convertToMorse(message));
@@ -114,12 +123,12 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static void turnOff() {
+    public static void turnCameraOff() {
         params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
         MainActivity.cam.setParameters(params);
     }
 
-    public static void turnOn() {
+    public static void turnCameraOn() {
         params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
         MainActivity.cam.setParameters(params);
     }
@@ -129,14 +138,10 @@ public class MainActivity extends Activity {
         messageField.addTextChangedListener(new TextWatcher() {
 
             @Override
-            public void afterTextChanged(Editable s) {
-
-            }
+            public void afterTextChanged(Editable s) {}
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
