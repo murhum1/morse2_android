@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Morseapp</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="permdesc_flashlight">Allows to use flashlight</string>
+    <string name="permlab_flashlight">Flashlight permission</string>
+</resources>
