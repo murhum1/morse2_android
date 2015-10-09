@@ -1,8 +1,6 @@
 package morse.morseapp;
 
-import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.hardware.Camera.Parameters.*;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -13,9 +11,11 @@ import java.util.List;
  * Created by Juho on 9.10.2015.
  */
 public class Torch {
-    static Camera cam;
-    static Camera.Parameters params;
+    private Camera cam;
+    private Camera.Parameters params;
 
+
+    // Starts the camera so it can be turned on
     public void init() {
         // Initialize camera
         cam = Camera.open();
@@ -23,20 +23,21 @@ public class Torch {
         cam.startPreview();
     }
 
+    // Completely turn off the camera
     public void clean() {
         cam.stopPreview();
         cam.release();
     }
+
     public void turnOff() {
         params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
         cam.setParameters(params);
-
     }
 
     public void turnOn() {
         try {
-
             String cameraParam = getFlashOnSetting();
+
             if (cameraParam == null)
                 return;
 
@@ -44,7 +45,7 @@ public class Torch {
             cam.setParameters(params);
 
         } catch (Exception e) {
-            Log.e(MainActivity.APP_TAG, "Error turning on torch: " + e.toString());
+            Log.e(MainActivity.APP_TAG, "Error turning on the torch: " + e.toString());
         }
     }
 
@@ -63,6 +64,7 @@ public class Torch {
         return null;
     }
 
+    // This can be used to get maximum speed the camera is able to flash its light
     public int getMaxSpeed() {
 
         List<Long> speeds = new ArrayList<Long>();
@@ -77,7 +79,7 @@ public class Torch {
         }
 
         // just in case..
-        if(speeds.isEmpty())
+        if (speeds.isEmpty())
             return 5;
 
         // Select the minimum FPS. It's the max speed
