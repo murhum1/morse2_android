@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public class MessageSender extends Thread {
 
+    Torch torch;
+
     private String msg;
     private Camera.Parameters params;
 
@@ -58,21 +60,20 @@ public class MessageSender extends Thread {
     }
     @Override
     public void run() {
-        params = MainActivity.cam.getParameters();
         try {
             Log.i(MainActivity.APP_TAG, "Current Unit length: " + Integer.toString((1000 / FPS) * 1));
             for (char c : msg.toCharArray()) {
 
                 if(morseMode == Mode.DOT_IS_SHORT_FLASH) {
                     if (c == '.') {
-                        MainActivity.turnCameraOn();
+                        torch.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
-                        MainActivity.turnCameraOff();
+                        torch.turnOff();
 
                     } else if (c == '-') {
-                        MainActivity.turnCameraOn();
+                        torch.turnOn();
                         Thread.sleep((1000 / FPS) * 3);
-                        MainActivity.turnCameraOff();
+                        torch.turnOff();
                     }
 
                     // wait between characters so we can distinguish different chars
@@ -81,19 +82,19 @@ public class MessageSender extends Thread {
                 } else if (morseMode == Mode.DOT_IS_OFF){
                     if (c == '.') {
                         if(flash_on)
-                            MainActivity.turnCameraOff();
+                            torch.turnOff();
                         Thread.sleep(((1000 / FPS) * 1));
                         flash_on = false;
 
                     } else if (c == '-') {
                         if(!flash_on)
-                            MainActivity.turnCameraOn();
+                            torch.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
                         flash_on = true;
                     }
                 }
             }
-            MainActivity.turnCameraOff();
+            torch.turnOff();
             sending_message = false;
         } catch (Exception e) {
             Log.e(MainActivity.APP_TAG, "Error: " + e.toString());
@@ -102,7 +103,7 @@ public class MessageSender extends Thread {
     }
 
 
-    public void sendMessage(String message, int FPS, Mode morseMode) {
+    public void sendMessage(String message, int FPS, Mode morseMode, Torch torch) {
         if(sending_message)
             return;
 
@@ -111,6 +112,7 @@ public class MessageSender extends Thread {
         this.morseMode = morseMode;
         this.FPS = FPS;
         this.msg = convertToMorse(message);
+        this.torch = torch;
 
         this.start();
     }

@@ -22,8 +22,7 @@ public class MainActivity extends Activity {
 
     static String APP_TAG = "MORSEAPP";
 
-    static Camera cam;
-    static Camera.Parameters params;
+    Torch torch;
 
     private MessageSender msgSender;
 
@@ -34,12 +33,13 @@ public class MainActivity extends Activity {
         initMessageField();
 
         msgSender = new MessageSender();
+        torch = new Torch();
     }
 
     public void sendMessage(View view) {
 
         // Let's not interrupt if it's sending a message
-        if(msgSender.isSendingMessage())
+        if (msgSender.isSendingMessage())
             return;
 
         // MessageSender extends Thread so we need to recreate it
@@ -49,29 +49,13 @@ public class MainActivity extends Activity {
         int fps = Integer.parseInt(((EditText) findViewById(R.id.fpsField)).getText().toString());
         Mode morseMode = ((RadioButton) findViewById(R.id.flashOffRadio)).isChecked() ? Mode.DOT_IS_OFF : Mode.DOT_IS_SHORT_FLASH;
 
-        msgSender.sendMessage(message, fps, morseMode);
+        msgSender.sendMessage(message, fps, morseMode, torch);
     }
 
 
     // This can be used to set maximum speed camera can be turned on
     public void setMaxSpeed(View view) {
-        String speed = "5";
-
-        List<Long> speeds = new ArrayList<Long>();
-
-        for(int i = 0; i < 5; i++) {
-            long startTime = System.currentTimeMillis();
-            turnCameraOn();
-            long endTime = System.currentTimeMillis();
-            turnCameraOff();
-
-            speeds.add(1000 / (endTime - startTime));
-        }
-
-        // Select the minimum FPS. It's the max speed
-        speed = Long.toString(Collections.min(speeds));
-
-        ((EditText) findViewById(R.id.fpsField)).setText(speed);
+        ((EditText) findViewById(R.id.fpsField)).setText(Integer.toString(torch.getMaxSpeed()));
     }
 
     // Sets the encoded message to the encodedMsg field
@@ -88,19 +72,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Initialize camera
-        cam = Camera.open();
-        params = cam.getParameters();
-        cam.startPreview();
+        torch.init();
     }
 
     @Override
     protected void onPause() {
         super.onDestroy();
-        cam.stopPreview();
-        cam.release();
+        torch.clean();
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -123,25 +103,17 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static void turnCameraOff() {
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        MainActivity.cam.setParameters(params);
-    }
-
-    public static void turnCameraOn() {
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-        MainActivity.cam.setParameters(params);
-    }
-
     public void initMessageField() {
         EditText messageField = (EditText) findViewById(R.id.messageField);
         messageField.addTextChangedListener(new TextWatcher() {
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -150,4 +122,5 @@ public class MainActivity extends Activity {
 
         });
     }
+
 }
