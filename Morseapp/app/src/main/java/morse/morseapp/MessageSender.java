@@ -1,6 +1,5 @@
 package morse.morseapp;
 
-import android.hardware.Camera;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -11,21 +10,21 @@ import java.util.Map;
  */
 public class MessageSender extends Thread {
 
-    private String msg;
-    private Camera.Parameters params;
+    Torch torch;
+
+    // The message in encoded format
+    private String morseMessage;
+    static Map<String, String> code = new HashMap<String, String>();
 
     private Mode morseMode;
     private int FPS = 10;
     private boolean flash_on = false;
-    private boolean sending_message = false;
 
-    static Map<String, String> code = new HashMap<String, String>();
+    private boolean sending_message = false;
 
     public static enum Mode {
         DOT_IS_SHORT_FLASH, DOT_IS_OFF
     }
-
-
 
     public MessageSender() {
         code.put("a", "-....-");
@@ -56,70 +55,76 @@ public class MessageSender extends Thread {
         code.put("w", "...---");
         code.put(" ", "..---");
     }
+
+
+
     @Override
     public void run() {
-        params = MainActivity.cam.getParameters();
         try {
             Log.i(MainActivity.APP_TAG, "Current Unit length: " + Integer.toString((1000 / FPS) * 1));
-            for (char c : msg.toCharArray()) {
+            for (char c : morseMessage.toCharArray()) {
 
-                if(morseMode == Mode.DOT_IS_SHORT_FLASH) {
+                if (morseMode == Mode.DOT_IS_SHORT_FLASH) {
                     if (c == '.') {
-                        MainActivity.turnCameraOn();
+                        torch.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
-                        MainActivity.turnCameraOff();
+                        torch.turnOff();
 
                     } else if (c == '-') {
-                        MainActivity.turnCameraOn();
+                        torch.turnOn();
                         Thread.sleep((1000 / FPS) * 3);
-                        MainActivity.turnCameraOff();
+                        torch.turnOff();
                     }
 
                     // wait between characters so we can distinguish different chars
                     Thread.sleep((1000 / FPS) * 2);
 
-                } else if (morseMode == Mode.DOT_IS_OFF){
+                } else if (morseMode == Mode.DOT_IS_OFF) {
                     if (c == '.') {
-                        if(flash_on)
-                            MainActivity.turnCameraOff();
+                        if (flash_on)
+                            torch.turnOff();
                         Thread.sleep(((1000 / FPS) * 1));
                         flash_on = false;
 
                     } else if (c == '-') {
-                        if(!flash_on)
-                            MainActivity.turnCameraOn();
+                        if (!flash_on)
+                            torch.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
                         flash_on = true;
                     }
                 }
             }
-            MainActivity.turnCameraOff();
+            torch.turnOff();
             sending_message = false;
         } catch (Exception e) {
-            Log.e(MainActivity.APP_TAG, "Error: " + e.toString());
+            Log.e(MainActivity.APP_TAG, "Sending message failed: " + e.toString());
             sending_message = false;
         }
     }
 
 
-    public void sendMessage(String message, int FPS, Mode morseMode) {
-        if(sending_message)
+    public void sendMessage(String message, int FPS, Mode morseMode, Torch torch) {
+        if (isSendingMessage())
             return;
 
         sending_message = true;
 
         this.morseMode = morseMode;
         this.FPS = FPS;
-        this.msg = convertToMorse(message);
+        this.morseMessage = convertToMorse(message);
+        this.torch = torch;
 
         this.start();
     }
 
+    /*
+           Converts a string to morse. The language is defined in MessageSender.code
+    */
     public static String convertToMorse(String message) {
         String morseMsg = "";
-        for(char c : message.toCharArray()) {
+        for (char c : message.toCharArray()) {
             String morseChar = Character.toString(c);
-            if(morseChar != null)
+            if (morseChar != null)
                 morseMsg += code.get(morseChar);
         }
 
@@ -130,5 +135,6 @@ public class MessageSender extends Thread {
     public boolean isSendingMessage() {
         return sending_message;
     }
+
 
 }
