@@ -1,15 +1,26 @@
 package morse.morseapp;
 
 import android.app.Activity;
+import android.content.Context;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.util.Size;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
+
 
 import morse.morseapp.MessageSender.Mode;
 
@@ -23,12 +34,39 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initMessageField();
 
         msgSender = new MessageSender();
-        torch = new Torch();
+
+    }
+
+    public void initCamera(View view) {
+
+        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        String cameraId;
+        try {
+            String[] cameraIdList = cameraManager.getCameraIdList();
+            cameraId = cameraIdList[0];
+            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+            StreamConfigurationMap configs = characteristics.get(
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Log.i("camera surface id:", "" + R.id.cameraSurface);
+            Size[] outputSizes = configs.getOutputSizes(R.id.cameraSurface);
+            Log.i("outputSizes", "" + outputSizes);
+            SurfaceView cameraSurfaceView = (SurfaceView) findViewById(R.id.cameraSurface);
+            SurfaceHolder cameraSurfaceHolder = cameraSurfaceView.getHolder();
+
+            cameraSurfaceHolder.setFixedSize(100, 100);
+
+            Surface cameraSurface = cameraSurfaceHolder.getSurface();
+
+            torch = new Torch(cameraManager, cameraSurface, cameraId);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendMessage(View view) {
@@ -67,7 +105,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        torch.init();
     }
 
     @Override

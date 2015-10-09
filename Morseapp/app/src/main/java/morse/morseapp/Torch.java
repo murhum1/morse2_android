@@ -1,9 +1,21 @@
 package morse.morseapp;
 
+import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
 import android.util.Log;
 
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.util.Size;
+import android.view.Surface;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -13,7 +25,68 @@ import java.util.List;
 public class Torch {
     private Camera cam;
     private Camera.Parameters params;
+    private CameraManager cameraManager;
+    private String cameraId;
+    private Surface cameraSurface;
+    private CameraDevice camera;
 
+
+    public Torch(CameraManager cameraManager, Surface cameraSurface, String cameraId) {
+        this.cameraManager = cameraManager;
+        this.cameraSurface = cameraSurface;
+        this.cameraId = cameraId;
+
+        try {
+            cameraManager.openCamera(cameraId, new CameraCallback(), null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    class CameraCallback extends CameraDevice.StateCallback {
+
+        @Override
+        public void onOpened(CameraDevice openedCamera) {
+            camera = openedCamera;
+            try {
+                Log.i("camera surface:", ""+ cameraSurface);
+                camera.createCaptureSession(Collections.singletonList(cameraSurface), new CameraCaptureSessionCallback(), null);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onDisconnected(CameraDevice camera) {
+
+        }
+
+        @Override
+        public void onError(CameraDevice camera, int error) {
+
+        }
+    }
+
+    class CameraCaptureSessionCallback extends CameraCaptureSession.StateCallback {
+
+        @Override
+        public void onConfigured(CameraCaptureSession session) {
+            try {
+                Log.i("WE'RE HERE!", "HOLY SHIT");
+                CaptureRequest.Builder builderi = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                builderi.addTarget(cameraSurface);
+                CaptureRequest requesti = builderi.build();
+                session.setRepeatingRequest(requesti, null, null);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onConfigureFailed(CameraCaptureSession session) {
+
+        }
+    }
 
     // Starts the camera so it can be turned on
     public void init() {
