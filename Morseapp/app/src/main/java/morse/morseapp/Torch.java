@@ -76,7 +76,6 @@ public class Torch {
             try {
                 mSession = session;
                 builderi = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
                 builderi.addTarget(cameraSurface);
                 CaptureRequest requesti = builderi.build();
                 session.setRepeatingRequest(requesti, null, null);
@@ -101,8 +100,10 @@ public class Torch {
 
     // Completely turn off the camera
     public void clean() {
-        cam.stopPreview();
-        cam.release();
+        mSession.close();
+        camera.close();
+        mSession = null;
+        camera = null;
     }
 
     public boolean flashIsOn() {
@@ -127,20 +128,6 @@ public class Torch {
         }
     }
 
-
-    private String getFlashOnSetting() {
-        List<String> flashModes = cam.getParameters().getSupportedFlashModes();
-
-        if (flashModes.contains(Camera.Parameters.FLASH_MODE_TORCH)) {
-            return Camera.Parameters.FLASH_MODE_TORCH;
-        } else if (flashModes.contains(Camera.Parameters.FLASH_MODE_ON)) {
-            return Camera.Parameters.FLASH_MODE_ON;
-        } else if (flashModes.contains(Camera.Parameters.FLASH_MODE_AUTO)) {
-            return Camera.Parameters.FLASH_MODE_AUTO;
-        }
-
-        return null;
-    }
 
     // This can be used to get maximum speed the camera is able to flash its light
     public int getMaxSpeed() {

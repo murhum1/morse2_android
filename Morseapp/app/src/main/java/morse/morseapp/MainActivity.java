@@ -2,13 +2,18 @@ package morse.morseapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.ImageFormat;
 import android.graphics.Paint;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ImageReader;
 import android.os.Bundle;
+import android.renderscript.Allocation;
+import android.renderscript.RenderScript;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,7 +27,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
-
+import android.renderscript.*;
 
 import morse.morseapp.MessageSender.Mode;
 
@@ -33,6 +38,11 @@ public class MainActivity extends Activity {
     Torch torch;
 
     private MessageSender msgSender;
+    private CameraManager cameraManager;
+    private Surface cameraSurface;
+    private String cameraId;
+    private RenderScript rs;
+    private Allocation allocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,31 +51,76 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         initMessageField();
 
+        rs = RenderScript.create(this);
+
+        Type.Builder yuvType = new Type.Builder(rs, Element.U8(rs));
+        yuvType.setYuvFormat(ImageFormat.NV21);
+        allocation = Allocation.createTyped(rs, yuvType.create());
+
         msgSender = new MessageSender();
 
-    }
-
-    public void initCamera(View view) {
-
-        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        String cameraId;
+        cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
             String[] cameraIdList = cameraManager.getCameraIdList();
             cameraId = cameraIdList[0];
-            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-            StreamConfigurationMap configs = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Log.i("camera surface id:", "" + R.id.cameraSurface);
-            Size[] outputSizes = configs.getOutputSizes(R.id.cameraSurface);
-            Log.i("outputSizes", "" + outputSizes);
+
             SurfaceView cameraSurfaceView = (SurfaceView) findViewById(R.id.cameraSurface);
             SurfaceHolder cameraSurfaceHolder = cameraSurfaceView.getHolder();
 
-            cameraSurfaceHolder.setFixedSize(100, 100);
+            cameraSurfaceHolder.addCallback(new SurfaceHolderCallback());
 
-            Surface cameraSurface = cameraSurfaceHolder.getSurface();
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
 
+    }
+
+    private class ImageMaster implements ImageReader.OnImageAvailableListener {
+
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            reader.
+        }
+    }
+
+    private class SurfaceHolderCallback implements SurfaceHolder.Callback {
+
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            initCamera(holder);
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+
+        }
+    }
+
+
+    Allocation.OnBufferAvailableListener
+
+    public void initCamera(SurfaceHolder cameraSurfaceHolder) {
+        CameraCharacteristics characteristics = null;
+        try {
+            cameraSurface = cameraSurfaceHolder.getSurface();
+
+            characteristics = cameraManager.getCameraCharacteristics(cameraId);
+            StreamConfigurationMap configs = characteristics.get(
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Log.i("camera surface id:", "" + R.id.cameraSurface);
+            int[] outputFormats = configs.getOutputFormats();
+            Size[] outputSizes = configs.getOutputSizes(outputFormats[0]);
+
+            Canvas cameraCanvas = cameraSurfaceHolder.lockCanvas();
+            cameraSurfaceHolder.setFixedSize(56, 178);// cameraCanvas.getWidth() , cameraCanvas.getHeight());
+            cameraSurfaceHolder.unlockCanvasAndPost(cameraCanvas);
             torch = new Torch(cameraManager, cameraSurface, cameraId);
+
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -127,8 +182,11 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
-        super.onDestroy();
-        torch.clean();
+        super.onPause();
+        Log.i("torch:", "" + torch);
+        if (torch != null) {
+            torch.clean();
+        }
     }
 
     @Override
