@@ -1,6 +1,7 @@
 package morse.morseapp;
 
 import android.content.Context;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -29,7 +30,8 @@ public class Torch {
     private String cameraId;
     private Surface cameraSurface;
     private CameraDevice camera;
-
+    public CaptureRequest.Builder builderi;
+    public CameraCaptureSession mSession;
 
     public Torch(CameraManager cameraManager, Surface cameraSurface, String cameraId) {
         this.cameraManager = cameraManager;
@@ -72,8 +74,9 @@ public class Torch {
         @Override
         public void onConfigured(CameraCaptureSession session) {
             try {
-                Log.i("WE'RE HERE!", "HOLY SHIT");
-                CaptureRequest.Builder builderi = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                mSession = session;
+                builderi = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
                 builderi.addTarget(cameraSurface);
                 CaptureRequest requesti = builderi.build();
                 session.setRepeatingRequest(requesti, null, null);
@@ -102,21 +105,23 @@ public class Torch {
         cam.release();
     }
 
+    public boolean flashIsOn() {
+        return builderi.get(CaptureRequest.FLASH_MODE) == CaptureRequest.FLASH_MODE_TORCH;
+    }
+
     public void turnOff() {
-        params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        cam.setParameters(params);
+        try {
+            builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+            mSession.setRepeatingRequest(builderi.build(), null, null);
+        } catch (Exception e) {
+            Log.e(MainActivity.APP_TAG, "Error turning on the torch: " + e.toString());
+        }
     }
 
     public void turnOn() {
         try {
-            String cameraParam = getFlashOnSetting();
-
-            if (cameraParam == null)
-                return;
-
-            params.setFlashMode(cameraParam);
-            cam.setParameters(params);
-
+            builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+            mSession.setRepeatingRequest(builderi.build(), null, null);
         } catch (Exception e) {
             Log.e(MainActivity.APP_TAG, "Error turning on the torch: " + e.toString());
         }

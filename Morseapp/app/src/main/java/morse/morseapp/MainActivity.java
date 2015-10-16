@@ -2,9 +2,11 @@ package morse.morseapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Paint;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
 import android.text.Editable;
@@ -67,6 +69,22 @@ public class MainActivity extends Activity {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    public void toggleFlash(View view) {
+        try {
+            if (torch.builderi.get(CaptureRequest.FLASH_MODE) == CaptureRequest.FLASH_MODE_TORCH) {
+                torch.builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+                torch.mSession.setRepeatingRequest(torch.builderi.build(), null, null);
+            }
+            else {
+                torch.builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+                torch.mSession.setRepeatingRequest(torch.builderi.build(), null, null);
+            }
+        } catch(CameraAccessException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void sendMessage(View view) {

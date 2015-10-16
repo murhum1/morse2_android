@@ -198,9 +198,17 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Toggle Flash"
+                android:id="@+id/button3"
+                android:layout_weight="0.21"
+                android:onClick="toggleFlash" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Init camera"
                 android:id="@+id/button2"
-                android:layout_gravity="center_horizontal"
+                android:layout_gravity="right"
                 android:layout_weight="0.21"
                 android:onClick="initCamera" />
 
