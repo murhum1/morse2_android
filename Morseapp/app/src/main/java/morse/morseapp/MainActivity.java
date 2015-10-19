@@ -1,6 +1,8 @@
 package morse.morseapp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -28,7 +30,7 @@ public class MainActivity extends Activity {
         initMessageField();
 
         msgSender = new MessageSender();
-        torch = new Torch();
+        torch = new Torch(this);
     }
 
     public void sendMessage(View view) {
@@ -44,7 +46,7 @@ public class MainActivity extends Activity {
         int fps = Integer.parseInt(((EditText) findViewById(R.id.fpsField)).getText().toString());
         Mode morseMode = ((RadioButton) findViewById(R.id.flashOffRadio)).isChecked() ? Mode.DOT_IS_OFF : Mode.DOT_IS_SHORT_FLASH;
 
-        msgSender.sendMessage(message, fps, morseMode, torch);
+        msgSender.sendMessage(message, fps, morseMode, torch, this);
     }
 
 
@@ -116,6 +118,20 @@ public class MainActivity extends Activity {
             }
 
         });
+    }
+
+    public void displayError(Exception e) {
+        new AlertDialog.Builder(this)
+                .setMessage("A little problem!")
+                .setMessage(e.toString())
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
 }

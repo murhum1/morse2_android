@@ -1,5 +1,7 @@
 package morse.morseapp;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -10,7 +12,9 @@ import java.util.Map;
  */
 public class MessageSender extends Thread {
 
+    MainActivity mainActivity;
     Torch torch;
+
 
     // The message in encoded format
     private String morseMessage;
@@ -61,23 +65,31 @@ public class MessageSender extends Thread {
     @Override
     public void run() {
         try {
+            int turnOnDelay = torch.getTurnOnDelay();
+            int turnOffDelay = torch.getTurnOffDelay();
+
+            if(turnOffDelay > (1000/FPS) || (turnOnDelay > (1000/FPS)))
+                throw new Exception("Torch turn on/off delay can't be longer than unit length. Timing would be off!");
+
             Log.i(MainActivity.APP_TAG, "Current Unit length: " + Integer.toString((1000 / FPS) * 1));
+
             for (char c : morseMessage.toCharArray()) {
 
                 if (morseMode == Mode.DOT_IS_SHORT_FLASH) {
+
                     if (c == '.') {
                         torch.turnOn();
-                        Thread.sleep((1000 / FPS) * 1);
+                        Thread.sleep((1000 / FPS) * 1 - turnOffDelay);
                         torch.turnOff();
 
                     } else if (c == '-') {
                         torch.turnOn();
-                        Thread.sleep((1000 / FPS) * 3);
+                        Thread.sleep((1000 / FPS) * 3 - turnOffDelay);
                         torch.turnOff();
                     }
 
                     // wait between characters so we can distinguish different chars
-                    Thread.sleep((1000 / FPS) * 2);
+                    Thread.sleep((1000 / FPS) * 2 - turnOnDelay);
 
                 } else if (morseMode == Mode.DOT_IS_OFF) {
                     if (c == '.') {
@@ -99,11 +111,12 @@ public class MessageSender extends Thread {
         } catch (Exception e) {
             Log.e(MainActivity.APP_TAG, "Sending message failed: " + e.toString());
             sending_message = false;
+            sendError(e);
         }
     }
 
 
-    public void sendMessage(String message, int FPS, Mode morseMode, Torch torch) {
+    public void sendMessage(String message, int FPS, Mode morseMode, Torch torch, MainActivity mainActivity) {
         if (isSendingMessage())
             return;
 
@@ -113,6 +126,7 @@ public class MessageSender extends Thread {
         this.FPS = FPS;
         this.morseMessage = convertToMorse(message);
         this.torch = torch;
+        this.mainActivity = mainActivity;
 
         this.start();
     }
@@ -136,5 +150,14 @@ public class MessageSender extends Thread {
         return sending_message;
     }
 
+    public void sendError(Exception e) {
+        final Exception fe = e;
+        mainActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mainActivity.displayError(fe);
+            }
+        });
+    }
 
 }

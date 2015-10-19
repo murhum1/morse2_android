@@ -11,10 +11,18 @@ import java.util.List;
  * Created by Juho on 9.10.2015.
  */
 public class Torch {
+    MainActivity mainActivity;
+
     private Camera cam;
     private Camera.Parameters params;
 
 
+    private int turnOnDelay = 0;
+    private int turnOffDelay = 0;
+
+    public Torch(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
+    }
     // Starts the camera so it can be turned on
     public void init() {
         // Initialize camera
@@ -46,6 +54,7 @@ public class Torch {
 
         } catch (Exception e) {
             Log.e(MainActivity.APP_TAG, "Error turning on the torch: " + e.toString());
+            mainActivity.displayError(e);
         }
     }
 
@@ -72,8 +81,8 @@ public class Torch {
         for (int i = 0; i < 5; i++) {
             long startTime = System.currentTimeMillis();
             this.turnOn();
-            long endTime = System.currentTimeMillis();
             this.turnOff();
+            long endTime = System.currentTimeMillis();
 
             speeds.add(1000 / (endTime - startTime));
         }
@@ -84,5 +93,48 @@ public class Torch {
 
         // Select the minimum FPS. It's the max speed
         return Collections.min(speeds).intValue();
+    }
+
+
+    public void updateTurnOnDelay() {
+        List<Long> speeds = new ArrayList<Long>();
+
+        for (int i = 0; i < 5; i++) {
+            long startTime = System.currentTimeMillis();
+            this.turnOn();
+            long endTime = System.currentTimeMillis();
+            this.turnOff();
+
+            speeds.add(endTime - startTime);
+        }
+
+        // Select the minimum FPS. It's the max speed
+        this.turnOnDelay = Collections.min(speeds).intValue();
+    }
+
+    public void updateTurnOffDelay() {
+        List<Long> speeds = new ArrayList<Long>();
+
+        for (int i = 0; i < 5; i++) {
+            this.turnOn();
+            long startTime = System.currentTimeMillis();
+            this.turnOff();
+            long endTime = System.currentTimeMillis();
+            speeds.add(endTime - startTime);
+        }
+
+        // Select the minimum FPS. It's the max speed
+        this.turnOffDelay = Collections.min(speeds).intValue();
+    }
+    public int getTurnOnDelay() {
+        if(this.turnOnDelay == 0)
+            updateTurnOnDelay();
+        return this.turnOnDelay;
+    }
+
+    public int getTurnOffDelay() {
+        if(this.turnOffDelay == 0)
+            updateTurnOffDelay();
+        return this.turnOffDelay;
     }
 }
