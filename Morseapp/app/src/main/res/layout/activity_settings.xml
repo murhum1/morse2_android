@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:paddingLeft="@dimen/spacing_normal"
+    android:paddingRight="@dimen/spacing_normal"
+    android:paddingBottom="@dimen/spacing_small"
+    android:paddingTop="@dimen/spacing_small"
+    >
+
+    <LinearLayout
+        android:id="@+id/chars_per_second"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="@dimen/row_height"
+            android:layout_weight="0.25"
+            android:padding="@dimen/spacing_small"
+            android:text="Chars / s"
+            />
+
+        <EditText
+            android:id="@+id/edit_text_chars_per_second"
+            android:layout_width="0dp"
+            android:layout_weight="0.75"
+            android:layout_height="@dimen/row_height"
+            android:padding="@dimen/spacing_small"
+            android:inputType="number"
+            android:text="5" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/note_text_view"
+        android:layout_below="@id/chars_per_second"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_normal"
+        android:background="#77000000"
+        android:textColor="@android:color/white"
+        android:padding="14dp"
+        android:text="Note: Camera might not be able to handle many flashes / second"
+        />
+
+    <RadioGroup
+        android:id="@+id/radio_group_dot_type"
+        android:layout_below="@id/note_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/spacing_small"
+        android:layout_marginTop="@dimen/spacing_normal"
+        android:layout_alignTop="@+id/linearLayout"
+        >
+
+        <RadioButton
+            android:id="@+id/radio_button_flash_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dot is flash off"
+            android:enabled="true"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radio_button_short_flash"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dot is a short flash"
+            android:enabled="true" />
+    </RadioGroup>
+
+    <LinearLayout
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/row_height">
+
+        <Button
+            android:id="@+id/button_set_max_speed"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="match_parent"
+            android:text="Set max speed" />
+
+    </LinearLayout>
+
+</RelativeLayout>

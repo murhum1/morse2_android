@@ -2,6 +2,7 @@ package morse.morseapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
@@ -30,6 +31,7 @@ import android.widget.TextView;
 import android.renderscript.*;
 
 import morse.morseapp.MessageSender.Mode;
+import morse.morseapp.utilities.FastClickPreventer;
 
 public class MainActivity extends Activity {
 
@@ -51,14 +53,31 @@ public class MainActivity extends Activity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initMessageField();
 
+        // assign click listener to the cog button (to open the settings!)
+        findViewById(R.id.button_open_settings).setOnClickListener(new FastClickPreventer(1000) {
+            @Override
+            public void onViewClick(View v) {
+                openSettings();
+            }
+        });
         rs = RenderScript.create(this);
 
-        Type.Builder yuvType = new Type.Builder(rs, Element.U8(rs));
-        yuvType.setYuvFormat(ImageFormat.NV21);
-        allocation = Allocation.createTyped(rs, yuvType.create());
+        //initMessageField();
 
+        //msgSender = new MessageSender();
+
+    }
+        //Type.Builder yuvType = new Type.Builder(rs, Element.U8(rs));
+        //yuvType.setYuvFormat(ImageFormat.NV21);
+        //allocation = Allocation.createTyped(rs, yuvType.create());
+
+    private void openSettings() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
+
+    public void initCamera(View view) {
         msgSender = new MessageSender();
 
         cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
@@ -179,14 +198,6 @@ public class MainActivity extends Activity {
         super.onResume();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.i("torch:", "" + torch);
-        if (torch != null) {
-            torch.clean();
-        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

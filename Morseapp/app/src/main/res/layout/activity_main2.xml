@@ -1,0 +1,221 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+    android:background="#4C847B"
+    android:id="@+id/OptionsLayout">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/linearLayout">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:weightSum="1">
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="108dp"
+                android:layout_weight="0.21">
+
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_gravity="top">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Message"
+                        android:id="@+id/textView2"
+                        android:layout_alignBottom="@+id/messageField"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center|left"
+                        android:layout_column="0" />
+
+                    <EditText
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/messageField"
+                        android:layout_below="@+id/editText"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:textColor="#FFFFFF"
+                        android:layout_alignLeft="@+id/fpsField"
+                        android:layout_alignStart="@+id/fpsField"
+                        android:gravity="right"
+                        android:layout_column="1"
+                        android:layout_weight="1" />
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Units / s"
+                        android:id="@+id/textView"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignBottom="@+id/editText"
+                        android:textColor="#FFFFFF"
+                        android:layout_column="0" />
+
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/fpsField"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignLeft="@+id/button_flash"
+                        android:layout_alignStart="@+id/button_flash"
+                        android:textColor="#FFFFFF"
+                        android:text="5"
+                        android:layout_column="1"
+                        android:layout_weight="1"
+                        android:gravity="right" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="Note: Camera might not be able to handle many flashes / second"
+                        android:id="@+id/textView3"
+                        android:layout_column="1"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"
+                        android:layout_weight="1" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"></TableRow>
+
+                <TableRow
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:id="@+id/encodedMsg"
+                        android:layout_column="1"
+                        android:gravity="center"
+                        android:textColor="#FFFFFF"
+                        android:layout_weight="1" />
+                </TableRow>
+
+            </TableLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="fill_parent"
+                android:layout_height="78dp"
+                android:weightSum="1">
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignTop="@+id/linearLayout"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true">
+
+                    <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dot is flash off"
+                        android:id="@+id/flashOffRadio"
+                        android:textColor="#FFFFFF"
+                        android:enabled="true"
+                        android:checked="true" />
+
+                    <RadioButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dot is a short flash"
+                        android:id="@+id/flashShortRadio"
+                        android:textColor="#FFFFFF"
+                        android:enabled="true" />
+                </RadioGroup>
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.10">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Send message!"
+                    android:id="@+id/button_flash"
+                    android:onClick="sendMessage"
+                    android:textColor="#FFFFFF"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_toLeftOf="@+id/button"
+                    android:layout_toStartOf="@+id/button" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Set Max speed"
+                    android:id="@+id/button"
+                    android:onClick="setMaxSpeed"
+                    android:layout_alignBottom="@+id/button_flash"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentEnd="true"
+                    android:textColor="#FFFFFF" />
+
+            </RelativeLayout>
+
+            <SurfaceView
+                android:layout_width="match_parent"
+                android:layout_height="209dp"
+                android:id="@+id/cameraSurface" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toggle Flash"
+                android:id="@+id/button3"
+                android:layout_weight="0.21"
+                android:onClick="toggleFlash" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Init camera"
+                android:id="@+id/button2"
+                android:layout_gravity="right"
+                android:layout_weight="0.21"
+                android:onClick="initCamera" />
+
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</RelativeLayout>
