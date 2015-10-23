@@ -5,6 +5,9 @@ android {
     buildToolsVersion "22.0.1"
 
     defaultConfig {
+        ndk {
+            moduleName = 'jni_test'
+        }
         applicationId "morse.morseapp"
         minSdkVersion 21
         targetSdkVersion 21

@@ -47,6 +47,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        Log.i("our awesome string:", returnedString());
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initMessageField();
@@ -79,7 +81,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            reader.
+            // reader.
         }
     }
 
@@ -100,9 +102,6 @@ public class MainActivity extends Activity {
 
         }
     }
-
-
-    Allocation.OnBufferAvailableListener
 
     public void initCamera(SurfaceHolder cameraSurfaceHolder) {
         CameraCharacteristics characteristics = null;
@@ -209,6 +208,12 @@ public class MainActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public native String returnedString();
+
+    static {
+        System.loadLibrary("jni_test");
     }
 
     public void initMessageField() {
