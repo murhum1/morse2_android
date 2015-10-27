@@ -8,6 +8,7 @@
     <style name="AppTheme.Translucent">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowNoTitle">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
     <style name="IconButton">
