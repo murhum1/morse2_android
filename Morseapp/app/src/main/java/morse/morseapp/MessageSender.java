@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class MessageSender extends Thread {
 
-    Torch torch;
+    CameraAndFlashHandler cameraAndFlashHandler;
 
     // The message in encoded format
     private String morseMessage;
@@ -66,14 +66,14 @@ public class MessageSender extends Thread {
 
                 if (morseMode == Mode.DOT_IS_SHORT_FLASH) {
                     if (c == '.') {
-                        torch.turnOn();
+                        cameraAndFlashHandler.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
-                        torch.turnOff();
+                        cameraAndFlashHandler.turnOff();
 
                     } else if (c == '-') {
-                        torch.turnOn();
+                        cameraAndFlashHandler.turnOn();
                         Thread.sleep((1000 / FPS) * 3);
-                        torch.turnOff();
+                        cameraAndFlashHandler.turnOff();
                     }
 
                     // wait between characters so we can distinguish different chars
@@ -82,19 +82,19 @@ public class MessageSender extends Thread {
                 } else if (morseMode == Mode.DOT_IS_OFF) {
                     if (c == '.') {
                         if (flash_on)
-                            torch.turnOff();
+                            cameraAndFlashHandler.turnOff();
                         Thread.sleep(((1000 / FPS) * 1));
                         flash_on = false;
 
                     } else if (c == '-') {
                         if (!flash_on)
-                            torch.turnOn();
+                            cameraAndFlashHandler.turnOn();
                         Thread.sleep((1000 / FPS) * 1);
                         flash_on = true;
                     }
                 }
             }
-            torch.turnOff();
+            cameraAndFlashHandler.turnOff();
             sending_message = false;
         } catch (Exception e) {
             Log.e(MainActivity.APP_TAG, "Sending message failed: " + e.toString());
@@ -103,7 +103,7 @@ public class MessageSender extends Thread {
     }
 
 
-    public void sendMessage(String message, int FPS, Mode morseMode, Torch torch) {
+    public void sendMessage(String message, int FPS, Mode morseMode, CameraAndFlashHandler cameraAndFlashHandler) {
         if (isSendingMessage())
             return;
 
@@ -112,7 +112,7 @@ public class MessageSender extends Thread {
         this.morseMode = morseMode;
         this.FPS = FPS;
         this.morseMessage = convertToMorse(message);
-        this.torch = torch;
+        this.cameraAndFlashHandler = cameraAndFlashHandler;
 
         this.start();
     }

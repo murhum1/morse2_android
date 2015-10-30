@@ -2,35 +2,45 @@ package morse.morseapp;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.ImageReader;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
+import android.util.Size;
+import android.widget.LinearLayout;
 
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.JavaCameraView;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import morse.morseapp.utilities.FastClickPreventer;
 
 public class MainActivity extends Activity {
 
-    static {
-        System.loadLibrary("opencv_java3");
-    }
-
     static String APP_TAG = "MORSEAPP";
 
-    Torch torch;
-    private JavaCameraView openCvCameraView;
+    CameraAndFlashHandler cameraAndFlashHandler;
+    private MessageSender msgSender;
+    private CameraManager cameraManager;
+    private Surface cameraSurface;
+    private String cameraId;
+    private ImageReader imageReader;
+
+    private LinearLayout layout;
+
+    private ArrayBlockingQueue imageQueue;
+    private ArrayBlockingQueue anotherQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -42,51 +52,77 @@ public class MainActivity extends Activity {
             }
         });
 
-        openCvCameraView = (JavaCameraView) findViewById(R.id.open_cv_view);
-        openCvCameraView.setVisibility(View.VISIBLE);
+        // Queues for storing produced / to-be-consumed data
+        imageQueue = new ArrayBlockingQueue(256);
+        anotherQueue = new ArrayBlockingQueue(256);
+
+        cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try {
+            String[] cameraIdList = cameraManager.getCameraIdList();
+            cameraId = cameraIdList[0];
+
+            SurfaceView cameraSurfaceView = (SurfaceView) findViewById(R.id.cameraSurface);
+            SurfaceHolder cameraSurfaceHolder = cameraSurfaceView.getHolder();
+            cameraSurfaceView.setVisibility(View.VISIBLE);
+
+            cameraSurfaceHolder.addCallback(new SurfaceHolderCallback());
+
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+    private class SurfaceHolderCallback implements SurfaceHolder.Callback {
+
         @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i("TAG", "OpenCV loaded successfully");
-                    openCvCameraView.enableView();
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
+        public void surfaceCreated(SurfaceHolder holder) {
+            initCamera(holder);
         }
-    };
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+
+        }
+    }
+
+    public void initCamera(SurfaceHolder cameraSurfaceHolder) {
+        CameraCharacteristics characteristics = null;
+        try {
+            cameraSurface = cameraSurfaceHolder.getSurface();
+
+            characteristics = cameraManager.getCameraCharacteristics(cameraId);
+            StreamConfigurationMap configs = characteristics.get(
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Log.i("camera surface id:", "" + R.id.cameraSurface);
+            int[] outputFormats = configs.getOutputFormats();
+            Size[] outputSizes = configs.getOutputSizes(outputFormats[0]);
+
+            imageReader = ImageReader.newInstance(outputSizes[0].getWidth(), outputSizes[0].getHeight(), ImageFormat.YUV_420_888, 25);
+            Surface imageReaderSurface = imageReader.getSurface();
+
+            Canvas cameraCanvas = cameraSurfaceHolder.lockCanvas();
+
+            cameraSurfaceHolder.setFixedSize(outputSizes[0].getWidth(), outputSizes[0].getHeight());
+            cameraSurfaceHolder.unlockCanvasAndPost(cameraCanvas);
+            cameraAndFlashHandler = new CameraAndFlashHandler(cameraManager, cameraSurface, imageReaderSurface, cameraId, imageReader, imageQueue);
+
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void openSettings() {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
 
-    public void toggleFlash(View view) {
-        try {
-            if (torch.builderi.get(CaptureRequest.FLASH_MODE) == CaptureRequest.FLASH_MODE_TORCH) {
-                torch.builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
-                torch.mSession.setRepeatingRequest(torch.builderi.build(), null, null);
-            }
-            else {
-                torch.builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
-                torch.mSession.setRepeatingRequest(torch.builderi.build(), null, null);
-            }
-        } catch(CameraAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_10, this, mLoaderCallback);
     }
 }

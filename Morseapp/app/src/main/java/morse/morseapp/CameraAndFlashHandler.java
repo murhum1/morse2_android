@@ -9,6 +9,8 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.media.Image;
+import android.media.ImageReader;
 import android.util.Log;
 
 import android.hardware.camera2.params.StreamConfigurationMap;
@@ -19,24 +21,29 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by Juho on 9.10.2015.
  */
-public class Torch {
-    private Camera cam;
-    private Camera.Parameters params;
+public class CameraAndFlashHandler {
     private CameraManager cameraManager;
     private String cameraId;
     private Surface cameraSurface;
     private CameraDevice camera;
+    private Surface imageReaderSurface;
+    private ArrayBlockingQueue imageQueue;
     public CaptureRequest.Builder builderi;
     public CameraCaptureSession mSession;
 
-    public Torch(CameraManager cameraManager, Surface cameraSurface, String cameraId) {
+    public CameraAndFlashHandler(CameraManager cameraManager, Surface cameraSurface, Surface imageReaderSurface, String cameraId, ImageReader imageReader, ArrayBlockingQueue imageQueue) {
         this.cameraManager = cameraManager;
         this.cameraSurface = cameraSurface;
+        this.imageReaderSurface = imageReaderSurface;
         this.cameraId = cameraId;
+        this.imageQueue = imageQueue;
+        ImageReader.OnImageAvailableListener imageAvailableListener = new OnImageAvailableListener();
+        imageReader.setOnImageAvailableListener(imageAvailableListener, null);
 
         try {
             cameraManager.openCamera(cameraId, new CameraCallback(), null);
@@ -51,8 +58,11 @@ public class Torch {
         public void onOpened(CameraDevice openedCamera) {
             camera = openedCamera;
             try {
-                Log.i("camera surface:", ""+ cameraSurface);
-                camera.createCaptureSession(Collections.singletonList(cameraSurface), new CameraCaptureSessionCallback(), null);
+                Log.i("camera surface:", "" + cameraSurface);
+                List<Surface> surfaceList = new ArrayList<>();
+                surfaceList.add(cameraSurface);
+                surfaceList.add(imageReaderSurface);
+                camera.createCaptureSession(surfaceList, new CameraCaptureSessionCallback(), null);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -77,6 +87,7 @@ public class Torch {
                 mSession = session;
                 builderi = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 builderi.addTarget(cameraSurface);
+                builderi.addTarget(imageReaderSurface);
                 CaptureRequest requesti = builderi.build();
                 session.setRepeatingRequest(requesti, null, null);
             } catch (CameraAccessException e) {
@@ -90,12 +101,25 @@ public class Torch {
         }
     }
 
-    // Starts the camera so it can be turned on
-    public void init() {
-        // Initialize camera
-        cam = Camera.open();
-        params = cam.getParameters();
-        cam.startPreview();
+    class OnImageAvailableListener implements ImageReader.OnImageAvailableListener {
+
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            Image img = reader.acquireNextImage();
+            // processImage(img);
+            Log.i("Got image!", "" + img);
+            img.close();
+        }
+    }
+
+    private void processImage(Image img) {
+        try {
+            Log.i("Image received", "");
+
+            imageQueue.put(img);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     // Completely turn off the camera
@@ -115,7 +139,7 @@ public class Torch {
             builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
             mSession.setRepeatingRequest(builderi.build(), null, null);
         } catch (Exception e) {
-            Log.e(MainActivity.APP_TAG, "Error turning on the torch: " + e.toString());
+            Log.e(MainActivity.APP_TAG, "Error turning on the cameraAndFlashHandler: " + e.toString());
         }
     }
 
@@ -124,7 +148,7 @@ public class Torch {
             builderi.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
             mSession.setRepeatingRequest(builderi.build(), null, null);
         } catch (Exception e) {
-            Log.e(MainActivity.APP_TAG, "Error turning on the torch: " + e.toString());
+            Log.e(MainActivity.APP_TAG, "Error turning on the cameraAndFlashHandler: " + e.toString());
         }
     }
 

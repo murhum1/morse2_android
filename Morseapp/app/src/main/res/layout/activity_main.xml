@@ -5,13 +5,12 @@
     android:layout_height="match_parent">
 
     <!-- the camera container -->
-    <org.opencv.android.JavaCameraView
-        android:id="@+id/open_cv_view"
+    <SurfaceView
+        android:id="@+id/cameraSurface"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        opencv:show_fps="true"
-        opencv:camera_id="any" />
+        />
 
     <!-- the message send bar, and the settings cog -->
     <RelativeLayout
