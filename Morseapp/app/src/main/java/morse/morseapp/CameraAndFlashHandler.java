@@ -113,13 +113,13 @@ public class CameraAndFlashHandler {
     }
 
     private void processImage(Image img) {
-        try {
+        /* try {
             Log.i("Image received", "");
 
-            imageQueue.put(img);
+            // imageQueue.put(img);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     // Completely turn off the camera

@@ -44,6 +44,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.i("string from c++:", returnedString());
+
         // assign click listener to the cog button (to open the settings!)
         findViewById(R.id.button_open_settings).setOnClickListener(new FastClickPreventer(1000) {
             @Override
@@ -119,6 +121,12 @@ public class MainActivity extends Activity {
     private void openSettings() {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
+    }
+
+    public native String returnedString();
+
+    static {
+        System.loadLibrary("jni_test");
     }
 
     @Override
