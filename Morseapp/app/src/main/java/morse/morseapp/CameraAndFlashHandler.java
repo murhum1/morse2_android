@@ -17,6 +17,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.util.Size;
 import android.view.Surface;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -106,20 +107,33 @@ public class CameraAndFlashHandler {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image img = reader.acquireNextImage();
-            // processImage(img);
+            processImage(img);
             Log.i("Got image!", "" + img);
             img.close();
         }
     }
 
+    private native int[] getLights(byte[] Y, int width, int height);
+
     private void processImage(Image img) {
-        /* try {
+
+        byte[] Y = new byte[img.getHeight() * img.getWidth()];
+
+        img.getPlanes()[0].getBuffer().get(Y);
+
+        int[] lights = getLights(Y, img.getWidth(), img.getHeight());
+
+        Log.i("höhö", "" + lights[0]);
+
+        /*
+        try {
             Log.i("Image received", "");
 
-            // imageQueue.put(img);
+            imageQueue.put(img);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }*/
+        }
+        */
     }
 
     // Completely turn off the camera
