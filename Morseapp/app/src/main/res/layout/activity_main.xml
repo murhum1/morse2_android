@@ -34,6 +34,7 @@
                 android:src="@drawable/ic_send_white_24dp" />
 
             <EditText
+                android:id="@+id/edit_text_message"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/row_height"
                 android:layout_toLeftOf="@id/button_send_message"

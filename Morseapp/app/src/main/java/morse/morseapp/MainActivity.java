@@ -17,6 +17,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.util.Size;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -44,6 +45,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        msgSender = new MessageSender();
         Log.i("string from c++:", returnedString());
 
         // assign click listener to the cog button (to open the settings!)
@@ -51,6 +53,15 @@ public class MainActivity extends Activity {
             @Override
             public void onViewClick(View v) {
                 openSettings();
+            }
+        });
+
+        findViewById(R.id.button_send_message).setOnClickListener(new FastClickPreventer(1000) {
+            @Override
+            public void onViewClick(View v) {
+                EditText messageField = (EditText) findViewById(R.id.edit_text_message);
+                int fps = 20;
+                msgSender.sendMessage(messageField.getText().toString(), 20, MessageSender.Mode.DOT_IS_SHORT_FLASH, cameraAndFlashHandler);
             }
         });
 
