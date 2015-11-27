@@ -51,7 +51,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        /*FrameLayout layout = (FrameLayout) findViewById(R.id.frameLayout);
+        FrameLayout layout = (FrameLayout) findViewById(R.id.frameLayout);
 
         rectSurface = new rectSurface(this);
         rectSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
@@ -60,11 +60,11 @@ public class MainActivity extends Activity {
         cameraSurfaceView = new SurfaceView(this);
         cameraSurfaceView.setVisibility(View.GONE);
         addContentView(cameraSurfaceView, new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT ));
-        */
+
         msgSender = new MessageSender();
 
         // assign click listener to the cog button (to open the settings!)
-        findViewById(R.id.button_open_settings).setOnClickListener(new FastClickPreventer(1000) {
+        /*findViewById(R.id.button_open_settings).setOnClickListener(new FastClickPreventer(1000) {
             @Override
             public void onViewClick(View v) {
                 openSettings();
@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
                 int fps = 20;
                 msgSender.sendMessage(messageField.getText().toString(), 20, MessageSender.Mode.DOT_IS_SHORT_FLASH, cameraAndFlashHandler);
             }
-        });
+        });*/
 
         // Queues for storing produced / to-be-consumed data
         imageQueue = new ArrayBlockingQueue(256);
