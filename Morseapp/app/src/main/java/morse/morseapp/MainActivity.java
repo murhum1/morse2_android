@@ -1,15 +1,19 @@
 package morse.morseapp;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.PixelFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
@@ -18,6 +22,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.util.Size;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,6 +41,8 @@ public class MainActivity extends Activity {
     private ImageReader imageReader;
 
     private LinearLayout layout;
+    rectSurface rectSurface;
+    SurfaceView cameraSurfaceView;
 
     private ArrayBlockingQueue imageQueue;
     private ArrayBlockingQueue anotherQueue;
@@ -44,9 +51,17 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        /*FrameLayout layout = (FrameLayout) findViewById(R.id.frameLayout);
 
+        rectSurface = new rectSurface(this);
+        rectSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        setContentView(rectSurface, new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT ));
+
+        cameraSurfaceView = new SurfaceView(this);
+        cameraSurfaceView.setVisibility(View.GONE);
+        addContentView(cameraSurfaceView, new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT ));
+        */
         msgSender = new MessageSender();
-        Log.i("string from c++:", returnedString());
 
         // assign click listener to the cog button (to open the settings!)
         findViewById(R.id.button_open_settings).setOnClickListener(new FastClickPreventer(1000) {
@@ -73,8 +88,6 @@ public class MainActivity extends Activity {
         try {
             String[] cameraIdList = cameraManager.getCameraIdList();
             cameraId = cameraIdList[0];
-
-            SurfaceView cameraSurfaceView = (SurfaceView) findViewById(R.id.cameraSurface);
             SurfaceHolder cameraSurfaceHolder = cameraSurfaceView.getHolder();
             cameraSurfaceView.setVisibility(View.VISIBLE);
 
@@ -103,10 +116,13 @@ public class MainActivity extends Activity {
         }
     }
 
+    Surface imageReaderSurface;
+
     public void initCamera(SurfaceHolder cameraSurfaceHolder) {
         CameraCharacteristics characteristics = null;
         try {
             cameraSurface = cameraSurfaceHolder.getSurface();
+//            rectHolder.setFormat(PixelFormat.TRANSPARENT);
 
             characteristics = cameraManager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap configs = characteristics.get(
@@ -115,14 +131,14 @@ public class MainActivity extends Activity {
             int[] outputFormats = configs.getOutputFormats();
             Size[] outputSizes = configs.getOutputSizes(outputFormats[0]);
 
-            imageReader = ImageReader.newInstance(outputSizes[0].getWidth(), outputSizes[0].getHeight(), ImageFormat.YUV_420_888, 25);
-            Surface imageReaderSurface = imageReader.getSurface();
+            imageReader = ImageReader.newInstance(300, 400, ImageFormat.YUV_420_888, 25);
+            imageReaderSurface = imageReader.getSurface();
 
-            Canvas cameraCanvas = cameraSurfaceHolder.lockCanvas();
+//            Canvas cameraCanvas = cameraSurfaceHolder.lockCanvas();
 
-            cameraSurfaceHolder.setFixedSize(outputSizes[0].getWidth(), outputSizes[0].getHeight());
-            cameraSurfaceHolder.unlockCanvasAndPost(cameraCanvas);
-            cameraAndFlashHandler = new CameraAndFlashHandler(cameraManager, cameraSurface, imageReaderSurface, cameraId, imageReader, imageQueue);
+            cameraSurfaceHolder.setFixedSize(300, 400);
+//            cameraSurfaceHolder.unlockCanvasAndPost(cameraCanvas);
+            cameraAndFlashHandler = new CameraAndFlashHandler(rectSurface, cameraManager, cameraSurface, imageReaderSurface, cameraId, imageReader, imageQueue);
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -134,10 +150,9 @@ public class MainActivity extends Activity {
         startActivity(intent);
     }
 
-    public native String returnedString();
 
     static {
-        System.loadLibrary("jni_test");
+        System.loadLibrary("jniprocess");
     }
 
     @Override

@@ -6,7 +6,8 @@ android {
 
     defaultConfig {
         ndk {
-            moduleName = 'jni_test'
+            moduleName = 'jniprocess'
+            stl "stlport_shared"
         }
         applicationId "morse.morseapp"
         minSdkVersion 21

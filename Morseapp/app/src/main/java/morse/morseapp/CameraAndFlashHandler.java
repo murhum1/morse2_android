@@ -1,7 +1,10 @@
 package morse.morseapp;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -16,6 +19,8 @@ import android.util.Log;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.util.Size;
 import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -36,16 +41,17 @@ public class CameraAndFlashHandler {
     private ArrayBlockingQueue imageQueue;
     public CaptureRequest.Builder builderi;
     public CameraCaptureSession mSession;
+    private rectSurface rect;
 
-    public CameraAndFlashHandler(CameraManager cameraManager, Surface cameraSurface, Surface imageReaderSurface, String cameraId, ImageReader imageReader, ArrayBlockingQueue imageQueue) {
+    public CameraAndFlashHandler(rectSurface rect, CameraManager cameraManager, Surface cameraSurface, Surface imageReaderSurface, String cameraId, ImageReader imageReader, ArrayBlockingQueue imageQueue) {
         this.cameraManager = cameraManager;
         this.cameraSurface = cameraSurface;
         this.imageReaderSurface = imageReaderSurface;
         this.cameraId = cameraId;
         this.imageQueue = imageQueue;
+        this.rect = rect;
         ImageReader.OnImageAvailableListener imageAvailableListener = new OnImageAvailableListener();
         imageReader.setOnImageAvailableListener(imageAvailableListener, null);
-
         try {
             cameraManager.openCamera(cameraId, new CameraCallback(), null);
         } catch (CameraAccessException e) {
@@ -108,7 +114,6 @@ public class CameraAndFlashHandler {
         public void onImageAvailable(ImageReader reader) {
             Image img = reader.acquireNextImage();
             processImage(img);
-            Log.i("Got image!", "" + img);
             img.close();
         }
     }
@@ -120,11 +125,13 @@ public class CameraAndFlashHandler {
         byte[] Y = new byte[img.getHeight() * img.getWidth()];
 
         img.getPlanes()[0].getBuffer().get(Y);
-
         int[] lights = getLights(Y, img.getWidth(), img.getHeight());
 
-        Log.i("höhö", "" + lights[0]);
-
+        Log.i("höhö", "Found " + lights.length / 5);
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        rect.renderer.renderData = lights;
+        rect.invalidate();
         /*
         try {
             Log.i("Image received", "");
