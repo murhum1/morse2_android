@@ -6,6 +6,4 @@ package morse.morseapp.message;
 public interface Torch {
     void turnOn();
     void turnOff();
-
-    boolean isOn();
 }

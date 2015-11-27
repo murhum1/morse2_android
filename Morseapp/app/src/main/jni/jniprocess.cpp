@@ -6,7 +6,7 @@ extern "C" {
     using namespace FW;
     ImageProcessor ip;
 
-    JNIEXPORT jintArray JNICALL Java_morse_morseapp_CameraAndFlashHandler_getLights(JNIEnv* env, jobject thiz, jbyteArray luminance, jint width, jint height) {
+    JNIEXPORT jintArray JNICALL Java_morse_morseapp_MainActivity_getLights(JNIEnv* env, jobject thiz, jbyteArray luminance, jint width, jint height) {
 
         char* data = (char*)env->GetByteArrayElements(luminance, NULL);
         ip.processImage(data, Vec2i(width, height));

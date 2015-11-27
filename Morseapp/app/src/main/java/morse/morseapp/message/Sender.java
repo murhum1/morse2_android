@@ -33,40 +33,36 @@ public class Sender {
             if (iterator.hasNext()) {
                 byte b = iterator.next();
 
-                if (b > 0 && !torch.isOn()) {
+                if (b > 0) {
                     torch.turnOn();
-                } else if (b < 0 && torch.isOn()) {
+                } else if (b < 0) {
                     torch.turnOff();
                 }
 
                 int interval = unitLength * Math.abs(b);
                 handler.postDelayed(this, interval);
             } else {
-                if (torch.isOn())
-                    torch.turnOff();
-
+                torch.turnOff();
                 sending = false;
             }
         }
     };
 
-    public static void send(String message) {
+    public static void send(final String message) {
         if (sending) return;
 
-        if (alphabet == null)
-            alphabet = Alphabet.INTERNATIONAL_MORSE;
-
         iterator = Encoder.encode(message, alphabet).iterator();
-        unitLength = Settings.getCharsPerSecond();
+        unitLength = 1000 / Settings.getCharsPerSecond();
         sending = true;
 
         handler.postDelayed(flasher, 0);
     }
 
     public static void cancel() {
-        handler.removeCallbacks(flasher);
+        if (null != handler)
+            handler.removeCallbacks(flasher);
 
-        if (torch.isOn())
+        if (null != torch)
             torch.turnOff();
 
         sending = false;

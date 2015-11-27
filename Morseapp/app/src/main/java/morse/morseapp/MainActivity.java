@@ -1,162 +1,127 @@
 package morse.morseapp;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.ImageFormat;
-import android.graphics.PixelFormat;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
 import android.media.ImageReader;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
-import android.util.Size;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import java.util.concurrent.ArrayBlockingQueue;
+import java.nio.ByteBuffer;
 
-import morse.morseapp.utilities.FastClickPreventer;
+import morse.morseapp.message.Alphabet;
+import morse.morseapp.message.Sender;
+import morse.morseapp.utilities.Settings;
 
-public class MainActivity extends Activity {
-
+public class MainActivity extends Activity implements View.OnClickListener {
     static String APP_TAG = "MORSEAPP";
 
-    CameraAndFlashHandler cameraAndFlashHandler;
-    private MessageSender msgSender;
-    private CameraManager cameraManager;
-    private Surface cameraSurface;
-    private String cameraId;
-    private ImageReader imageReader;
-
-    private LinearLayout layout;
-    rectSurface rectSurface;
-    SurfaceView cameraSurfaceView;
-
-    private ArrayBlockingQueue imageQueue;
-    private ArrayBlockingQueue anotherQueue;
+    private CameraFragment mCameraFragment;
+    private TextView mSendTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FrameLayout layout = (FrameLayout) findViewById(R.id.frameLayout);
+        if (null == savedInstanceState) {
+            mCameraFragment = CameraFragment.newInstance();
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.container, mCameraFragment)
+                    .commit();
+        } else {
+            mCameraFragment = (CameraFragment) getFragmentManager().findFragmentById(R.id.container);
+        }
 
-        rectSurface = new rectSurface(this);
-        rectSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
-        setContentView(rectSurface, new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT ));
+        mSendTextView = (TextView) findViewById(R.id.edit_text_message);
 
-        cameraSurfaceView = new SurfaceView(this);
-        cameraSurfaceView.setVisibility(View.GONE);
-        addContentView(cameraSurfaceView, new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT ));
+        // set button listeners
+        findViewById(R.id.button_open_settings).setOnClickListener(this);
+        findViewById(R.id.button_send_message).setOnClickListener(this);
 
-        msgSender = new MessageSender();
+        mCameraFragment.setOnImageAvailableListener(onImageAvailableListener);
+        Settings.setContext(this);
+    }
 
-        // assign click listener to the cog button (to open the settings!)
-        /*findViewById(R.id.button_open_settings).setOnClickListener(new FastClickPreventer(1000) {
-            @Override
-            public void onViewClick(View v) {
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.button_open_settings:
                 openSettings();
-            }
-        });
-
-        findViewById(R.id.button_send_message).setOnClickListener(new FastClickPreventer(1000) {
-            @Override
-            public void onViewClick(View v) {
-                EditText messageField = (EditText) findViewById(R.id.edit_text_message);
-                int fps = 20;
-                msgSender.sendMessage(messageField.getText().toString(), 20, MessageSender.Mode.DOT_IS_SHORT_FLASH, cameraAndFlashHandler);
-            }
-        });*/
-
-        // Queues for storing produced / to-be-consumed data
-        imageQueue = new ArrayBlockingQueue(256);
-        anotherQueue = new ArrayBlockingQueue(256);
-
-        cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        try {
-            String[] cameraIdList = cameraManager.getCameraIdList();
-            cameraId = cameraIdList[0];
-            SurfaceHolder cameraSurfaceHolder = cameraSurfaceView.getHolder();
-            cameraSurfaceView.setVisibility(View.VISIBLE);
-
-            cameraSurfaceHolder.addCallback(new SurfaceHolderCallback());
-
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+                break;
+            case R.id.button_send_message:
+                sendMessage();
+                break;
         }
     }
 
-    private class SurfaceHolderCallback implements SurfaceHolder.Callback {
-
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            initCamera(holder);
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-
-        }
-    }
-
-    Surface imageReaderSurface;
-
-    public void initCamera(SurfaceHolder cameraSurfaceHolder) {
-        CameraCharacteristics characteristics = null;
-        try {
-            cameraSurface = cameraSurfaceHolder.getSurface();
-//            rectHolder.setFormat(PixelFormat.TRANSPARENT);
-
-            characteristics = cameraManager.getCameraCharacteristics(cameraId);
-            StreamConfigurationMap configs = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Log.i("camera surface id:", "" + R.id.cameraSurface);
-            int[] outputFormats = configs.getOutputFormats();
-            Size[] outputSizes = configs.getOutputSizes(outputFormats[0]);
-
-            imageReader = ImageReader.newInstance(300, 400, ImageFormat.YUV_420_888, 25);
-            imageReaderSurface = imageReader.getSurface();
-
-//            Canvas cameraCanvas = cameraSurfaceHolder.lockCanvas();
-
-            cameraSurfaceHolder.setFixedSize(300, 400);
-//            cameraSurfaceHolder.unlockCanvasAndPost(cameraCanvas);
-            cameraAndFlashHandler = new CameraAndFlashHandler(rectSurface, cameraManager, cameraSurface, imageReaderSurface, cameraId, imageReader, imageQueue);
-
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * Open the settings window for the app.
+     */
     private void openSettings() {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
 
+    /**
+     * Sends the current message that the user typed in.
+     * Sender.send() will not run if there is already a send action ongoing.
+     */
+    private void sendMessage() {
+        Sender.setTorch(mCameraFragment);
+        Sender.setAlphabet(Alphabet.INTERNATIONAL_MORSE);
+
+        String message = mSendTextView.getText().toString().trim();
+        if (!message.isEmpty())
+            Sender.send(message.toLowerCase());
+    }
+
+    /**
+     * This will be run on every frame of the image stream.
+     * Set this to be the onImageAvailableListener of mCameraFragment!
+     */
+    private final ImageReader.OnImageAvailableListener onImageAvailableListener  = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            Image next = reader.acquireNextImage();
+            processImage(next);
+            next.close();
+        }
+    };
+
+    private void processImage(Image img) {
+        int size = img.getHeight() * img.getWidth();
+        byte[] Y = new byte[size];
+
+        ByteBuffer plane0 = img.getPlanes()[0].getBuffer();
+        plane0.get(Y);
+
+        int[] lights = getLights(Y, img.getWidth(), img.getHeight());
+
+        Log.d("PROCESS", "Found: " + (lights.length / 5));
+    }
+
+    /**
+     * Cancel ongoing send actions when the activity is destroyed!
+     * (if there are any)
+     */
+    @Override
+    protected void onDestroy() {
+        Sender.cancel();
+        super.onDestroy();
+    }
+
+    /**
+     * -------------------------------------------------------
+     * ------------- INIT AWESOME NATIVE STUFF ---------------
+     * --------------------- BELOW !! ------------------------
+     * -------------------------------------------------------
+     */
 
     static {
         System.loadLibrary("jniprocess");
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
+    private native int[] getLights(byte[] Y, int width, int height);
 }
