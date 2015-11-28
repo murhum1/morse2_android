@@ -26,6 +26,7 @@ import android.content.DialogInterface;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -35,7 +36,6 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
@@ -60,6 +60,10 @@ import java.util.concurrent.TimeUnit;
 
 import morse.morseapp.message.Torch;
 
+/**
+ * Modified version of Google's Camera2BasicFragment.
+ * Basically, a class that takes care of all camera related stuff, with appropriate hooks for other classes to act on.
+ */
 public class CameraFragment extends Fragment implements Torch {
 
     /**
@@ -139,6 +143,11 @@ public class CameraFragment extends Fragment implements Torch {
     private CameraDevice mCameraDevice;
 
     /**
+     * The {@link android.util.Size} the maximum resolution this sensor can capture (main camera).
+     */
+    private Size mSensorSize;
+
+    /**
      * The {@link android.util.Size} of camera preview.
      */
     private Size mPreviewSize;
@@ -149,6 +158,15 @@ public class CameraFragment extends Fragment implements Torch {
     private Size mReadSize;
 
 
+    /**
+     * The rectangle drawing view that will be on top of the camera stream.
+     */
+    private DrawRectanglesView mDrawRectanglesView;
+
+    /**
+     * The {@link ImageReader} the image reader that will read a smaller (compared to preview) image stream
+     * and whose images will be processed to find morse characters.
+     */
     private ImageReader mImageReader;
 
 
@@ -295,6 +313,7 @@ public class CameraFragment extends Fragment implements Torch {
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         mTextureView = (TextureView) view.findViewById(R.id.texture);
+        mDrawRectanglesView = (DrawRectanglesView) view.findViewById(R.id.rectlayout);
     }
 
     @Override
@@ -348,14 +367,26 @@ public class CameraFragment extends Fragment implements Torch {
                     continue;
                 }
 
-                // For still image captures, we use the largest available size.
+                // find sensor size
+                if (null == mSensorSize) {
+                    int formatsNumber = map.getOutputFormats().length;
+                    Size[][] allSizes = new Size[formatsNumber][];
+
+                    for (int i = 0; i < formatsNumber; i++) {
+                        allSizes[i] = map.getOutputSizes(map.getOutputFormats()[i]);
+                    }
+
+                    mSensorSize = getSensorSize(allSizes);
+                }
+
                 Size[] sizeChoices = map.getOutputSizes(ImageFormat.YUV_420_888);
-                //Size largest = Collections.max(Arrays.asList(sizeChoices), new CompareSizesByArea());
-                //double r = Math.max(width, height) / 800.0;
+
+                // We set 400x300 as our reference for imageReader images.
                 mReadSize = getImageReaderSize(sizeChoices, new Size(400, 300), sensorOrientation);
 
                 mImageReader = ImageReader.newInstance(mReadSize.getWidth(), mReadSize.getHeight(),
                         ImageFormat.YUV_420_888, /*maxImages*/2);
+
                 mImageReader.setOnImageAvailableListener(
                         mOnImageAvailableListener, mBackgroundHandler);
 
@@ -456,12 +487,29 @@ public class CameraFragment extends Fragment implements Torch {
         });
     }
 
+    private Size getSensorSize(Size[][] choices) {
+        int w = 0, h = 0;
+        for (Size[] sizes : choices) {
+            for (Size size : sizes) {
+                if (size.getHeight() > h) {
+                    h = size.getHeight();
+                }
+                if (size.getWidth() > w) {
+                    w = size.getWidth();
+                }
+            }
+        }
+
+        return new Size(w, h);
+    }
+
     /**
      * Opens the camera specified by {@link CameraFragment#mCameraId}.
      */
     private void openCamera(int width, int height) {
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
+
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
@@ -562,10 +610,13 @@ public class CameraFragment extends Fragment implements Torch {
                             try {
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                                        CaptureRequest.CONTROL_AF_MODE_AUTO);
+
                                 // auto-exposure on.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                                         CaptureRequest.CONTROL_AE_MODE_ON);
+
+                                // flash initially turned off.
                                 mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE,
                                         CaptureRequest.FLASH_MODE_OFF);
 
@@ -603,6 +654,7 @@ public class CameraFragment extends Fragment implements Torch {
         if (null == mTextureView || null == mPreviewSize || null == activity) {
             return;
         }
+
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
@@ -610,18 +662,51 @@ public class CameraFragment extends Fragment implements Torch {
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
 
-        float r1 = viewHeight / bufferRect.height();
-        float r2 = viewWidth / bufferRect.width();
-        float scale = Math.max(r1, r2);
+        if (viewWidth != viewHeight * mPreviewSize.getWidth() / mPreviewSize.getHeight()) {
+            float r1 = viewHeight / bufferRect.height();
+            float r2 = viewWidth / bufferRect.width();
+            float scale = Math.max(r1, r2);
 
-        matrix.postScale(1 / r2 * scale, 1 / r1 * scale, bufferRect.centerX(), bufferRect.centerY());
+            matrix.postScale(1 / r2 * scale, 1 / r1 * scale, centerX, centerY);
+        }
 
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             matrix.postRotate(90 * (rotation - 2), centerX, centerY);
         } else if (Surface.ROTATION_180 == rotation) {
             matrix.postRotate(180, centerX, centerY);
         }
+        configureDrawRectanglesView();
         mTextureView.setTransform(matrix);
+    }
+
+    /**
+     * Configure the DrawRectanglesView's transformation matrix.
+     * This method should be called each time the preview size or the image size changes.
+     */
+    private void configureDrawRectanglesView() {
+        int w = mImageReader.getWidth();
+        int h = mImageReader.getHeight();
+
+        mDrawRectanglesView.setToViewTransform(mSensorSize, new Size(w, h), mPreviewSize);
+    }
+
+    /**
+     * Set color of the rectangles that will be drawn on screen.
+     * @param color
+     */
+    public void setDrawnRectangleColor(int color) {
+        if (null != mDrawRectanglesView)
+            mDrawRectanglesView.setColor(color);
+    }
+
+    /**
+     * Set the rectangles that will be drawn on screen by DrawRectanglesView
+     * Notice: these rectangles should be relative the the image size (imageReader size).
+     * @param rectangles: the rectangles to draw; null if nothing should be drawn
+     */
+    public void setDrawnRectangles(ArrayList<Rect> rectangles) {
+        if (null != mDrawRectanglesView)
+            mDrawRectanglesView.setRectangles(rectangles);
     }
 
     /**
@@ -670,7 +755,7 @@ public class CameraFragment extends Fragment implements Torch {
 
 
     /**
-     * Handle flash blinks
+     * Handle flash blinks as required by the {@link Torch} interface
      */
 
     public void turnOff() {

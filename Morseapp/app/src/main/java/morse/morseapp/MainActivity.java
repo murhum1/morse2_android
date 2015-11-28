@@ -1,21 +1,26 @@
 package morse.morseapp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Rect;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import morse.morseapp.message.Alphabet;
 import morse.morseapp.message.Sender;
 import morse.morseapp.utilities.Settings;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity implements View.OnClickListener, ImageReader.OnImageAvailableListener {
     static String APP_TAG = "MORSEAPP";
 
     private CameraFragment mCameraFragment;
@@ -24,7 +29,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // immediately set settings context
+        Settings.setContext(getApplicationContext());
+
+        // set the layout for this activity
         setContentView(R.layout.activity_main);
+
+        /**
+         * Only add a new fragment if there isn't one in memory...
+         * Else, reassign the mCameraFragment pointer to the existing fragment from the fragment manager.
+         */
         if (null == savedInstanceState) {
             mCameraFragment = CameraFragment.newInstance();
             getFragmentManager().beginTransaction()
@@ -40,8 +55,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.button_open_settings).setOnClickListener(this);
         findViewById(R.id.button_send_message).setOnClickListener(this);
 
-        mCameraFragment.setOnImageAvailableListener(onImageAvailableListener);
-        Settings.setContext(this);
+        // set image processing listener
+        mCameraFragment.setOnImageAvailableListener(this);
     }
 
     @Override
@@ -58,6 +73,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * Open the settings window for the app.
+     * All settings are saved directly to the static Settings class, se we don't need to wait for an activity response anywhere.
      */
     private void openSettings() {
         Intent intent = new Intent(this, SettingsActivity.class);
@@ -78,17 +94,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     /**
-     * This will be run on every frame of the image stream.
-     * Set this to be the onImageAvailableListener of mCameraFragment!
+     * Overridden method from OnImageAvailableListener.
+     * We'll set this activity as the listener of our imageReader in mCameraFragment.
      */
-    private final ImageReader.OnImageAvailableListener onImageAvailableListener  = new ImageReader.OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader reader) {
-            Image next = reader.acquireNextImage();
-            processImage(next);
-            next.close();
-        }
-    };
+    @Override
+    public void onImageAvailable(ImageReader reader) {
+        Image next = reader.acquireNextImage();
+        processImage(next);
+        next.close();
+    }
+
+    boolean debugVarRects = false;
 
     private void processImage(Image img) {
         int size = img.getHeight() * img.getWidth();
@@ -100,6 +116,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
         int[] lights = getLights(Y, img.getWidth(), img.getHeight());
 
         Log.d("PROCESS", "Found: " + (lights.length / 5));
+
+        /**
+         * Below, some test code for rectangle display!
+         */
+
+        if (debugVarRects)
+            return;
+
+        debugVarRects = true;
+
+        int w = img.getWidth();
+        int h = img.getHeight();
+        int s = 10;
+        Rect mid = new Rect(0, 0, s, s);
+        mid.offset((w - s) / 2, (h - s) / 2);
+        ArrayList<Rect> rects = new ArrayList<>();
+        rects.add(new Rect(0, 0, w, h));
+        rects.add(mid);
+
+        mCameraFragment.setDrawnRectangleColor(Color.RED);
+        mCameraFragment.setDrawnRectangles(rects);
     }
 
     /**

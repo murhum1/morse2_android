@@ -2,11 +2,15 @@ package morse.morseapp.utilities;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
+import android.view.ViewConfiguration;
 
 /**
  * Created by ekreutzman on 19/10/15.
@@ -33,6 +37,7 @@ public class Settings {
 
     public static void setContext(Context context) {
         Settings.context = context;
+
     }
 
     public static Integer getCharsPerSecond() {
@@ -86,5 +91,30 @@ public class Settings {
             else if (value instanceof Boolean) editor.putBoolean(key, (Boolean) value);
         }
         editor.commit();
+    }
+
+    /**
+     * Get the height of the on-screen navigation bar (in pixels)
+     * @returns the height of the navigation bar (0 if no on-screen navbar)
+     */
+    public static int getNavigationBarHeight() {
+        int result = 0;
+        int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0 && hasNavBar(context)) {
+            result = context.getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
+    private static boolean hasNavBar(Context context) {
+        Resources resources = context.getResources();
+        int id = resources.getIdentifier("config_showNavigationBar", "bool", "android");
+        if (id > 0) {
+            return resources.getBoolean(id);
+        } else {    // Check for keys
+            boolean hasMenuKey = ViewConfiguration.get(context).hasPermanentMenuKey();
+            boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+            return !hasMenuKey && !hasBackKey;
+        }
     }
 }
