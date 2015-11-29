@@ -46,12 +46,12 @@ namespace FW {
 
 			lastBlinkerID = 0;
 			stabilize_image = false;
-			downscalefactor_slider = 2;
-			pointsearch_min = 3;
+			downscalefactor_slider = 1;
+			pointsearch_min = 1;
 			pointsearch_max = 4;
 
 			lightsearch_threshold = .06f;
-			shadowCutOff = .5f;
+			shadowCutOff = .6f;
 		}
 
 		~ImageProcessor(void) { }

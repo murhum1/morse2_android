@@ -27,6 +27,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
 
     private CameraFragment mCameraFragment;
     private TextView mSendTextView;
+    private LightPostProcessor lightProcessor = new LightPostProcessor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +118,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
 
         int[] lights = getLights(Y, img.getWidth(), img.getHeight());
 
-        Log.d("PROCESS", "Found: " + (lights.length / 5));
 
         /**
          * Below, some test code for rectangle display!
@@ -126,8 +126,11 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         if (debugVarRects)
             return;
 
-        debugVarRects = true;
+        //debugVarRects = true;
 
+        lightProcessor.ProcessLights(lights); // Run light postprocess, merging found lights to previously seen blinkers
+
+        Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
         int w = img.getWidth();
         int h = img.getHeight();
         int s = 10;
@@ -137,7 +140,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
 
         /* we add one rectangle that covers the Image fully, and one small one in the center. */
         rects.add(new Rect(0, 0, w, h));
-        rects.add(mid);
+        for(LightPostProcessor.Blinker b : lightProcessor.blinkers)
+        {
+            rects.add(new Rect((int)b.y, (int)b.x, (int)(b.y+b.size), (int)(b.x+b.size)));
+        }
 
         mCameraFragment.setDrawnRectangleColor(Color.RED);
         mCameraFragment.setDrawnRectangles(rects);
