@@ -1,6 +1,7 @@
 package morse.morseapp.message;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utility class that converts a message such as "hello world" to a list of bytes.
@@ -12,12 +13,7 @@ import java.util.ArrayList;
  * Naturally, this class isn't concerned with the millisecond length of each unit.
  * */
 public class Encoder {
-    public static final int DOT_SHORT = 0;
-    public static final int DOT_OFF = 1;
-
-    private static int mode = DOT_SHORT;
-
-    static ArrayList<Byte> encode(String message, Alphabet alphabet) {
+    public static ArrayList<Byte> encode(String message, Alphabet alphabet) {
         char[] chars = message.toCharArray();
 
         ArrayList<Byte> bytes = new ArrayList<>();
@@ -42,5 +38,16 @@ public class Encoder {
         }
 
         return bytes;
+    }
+
+    /**
+     * Decodes a message received by some sort of receiver.
+     * @param bits: the response as a sequence of bits (false is one unit of light off, true is one unit light on)
+     * @param alphabet: the alphabet the message was encoded in
+     * @returns the decoded string
+     */
+    public static String decode(List<Boolean> bits, Alphabet alphabet) {
+        // decoding done separately for different alphabets to improve efficiency
+        return alphabet.decodeMessage(bits);
     }
 }

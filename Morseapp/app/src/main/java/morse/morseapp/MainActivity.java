@@ -15,8 +15,10 @@ import android.widget.TextView;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 
 import morse.morseapp.message.Alphabet;
+import morse.morseapp.message.Encoder;
 import morse.morseapp.message.Sender;
 import morse.morseapp.utilities.Settings;
 
@@ -132,6 +134,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         Rect mid = new Rect(0, 0, s, s);
         mid.offset((w - s) / 2, (h - s) / 2);
         ArrayList<Rect> rects = new ArrayList<>();
+
+        /* we add one rectangle that covers the Image fully, and one small one in the center. */
         rects.add(new Rect(0, 0, w, h));
         rects.add(mid);
 

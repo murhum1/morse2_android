@@ -3,9 +3,9 @@ package morse.morseapp;
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
+import morse.morseapp.message.Alphabet;
 import morse.morseapp.utilities.Settings;
 
 /**
@@ -14,7 +14,7 @@ import morse.morseapp.utilities.Settings;
 public class SettingsActivity extends Activity {
 
     private EditText charsPerSecondEditor;
-    private RadioGroup radioGroupDotType;
+    private RadioGroup radioGroupAlphabet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,17 +25,17 @@ public class SettingsActivity extends Activity {
         Settings.setContext(this);
 
         charsPerSecondEditor = (EditText) findViewById(R.id.edit_text_chars_per_second);
-        radioGroupDotType = (RadioGroup) findViewById(R.id.radio_group_dot_type);
+        radioGroupAlphabet = (RadioGroup) findViewById(R.id.radio_group_alphabet);
 
         /** assign saved value to view for the chars per second EditText */
         charsPerSecondEditor.setText(Settings.getCharsPerSecond().toString());
 
         /** assign saved value to view for the radio group! */
-        radioGroupDotType.clearCheck();
-        if (Settings.getDotType() == Settings.DOT_TYPE.FLASH_OFF) {
-            radioGroupDotType.check(R.id.radio_button_flash_off);
+        radioGroupAlphabet.clearCheck();
+        if (Settings.getAlphabet() == Alphabet.BIT_ENCODING_ALPHABET) {
+            radioGroupAlphabet.check(R.id.radio_button_bit_alphabet);
         } else {
-            radioGroupDotType.check(R.id.radio_button_short_flash);
+            radioGroupAlphabet.check(R.id.radio_button_international_morse);
         }
     }
 
@@ -48,8 +48,8 @@ public class SettingsActivity extends Activity {
             charsPerSecondEditor.setText(Settings.getCharsPerSecond());
         }
 
-        boolean flashOff = radioGroupDotType.getCheckedRadioButtonId() == R.id.radio_button_flash_off;
-        Settings.setDotType((flashOff) ? Settings.DOT_TYPE.FLASH_OFF : Settings.DOT_TYPE.SHORT_FLASH);
+        boolean bitAlphabet = radioGroupAlphabet.getCheckedRadioButtonId() == R.id.radio_button_bit_alphabet;
+        Settings.setAlphabet((bitAlphabet) ? Alphabet.BIT_ENCODING_ALPHABET : Alphabet.INTERNATIONAL_MORSE);
     }
 
     @Override

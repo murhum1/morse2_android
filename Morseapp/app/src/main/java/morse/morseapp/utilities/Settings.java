@@ -7,10 +7,13 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
+
+import morse.morseapp.message.Alphabet;
 
 /**
  * Created by ekreutzman on 19/10/15.
@@ -19,19 +22,13 @@ public class Settings {
     private static final String PREF_KEY = "morse.morseapp.SHARED_PREFERENCES";
     private static Context context;
 
-    public enum DOT_TYPE {
-        SHORT_FLASH, FLASH_OFF
-    }
-
-
     /** the different settings */
 
     private static Integer charsPerSecond; // how many chars per second to send with the app
     private static final String CHARS_PER_SECOND_KEY = "chars_per_second";
 
-    private static DOT_TYPE dotType; // is the dot ('.' in morse) flash off, or is it just a shorter flash?
-    private static final String DOT_TYPE_KEY = "dot_type";
-
+    private static Alphabet currentAlphabet;
+    private static String ALPHABET_KEY = "alphabet";
 
     /** getters and setters for settings */
 
@@ -55,19 +52,24 @@ public class Settings {
         save(context, CHARS_PER_SECOND_KEY, charsPerSecond);
     }
 
-    public static DOT_TYPE getDotType() {
-        if (dotType == null) {
-            boolean isFlashOff = sharedPrefs(context).getBoolean(DOT_TYPE_KEY, false);
-            dotType = (isFlashOff) ? DOT_TYPE.FLASH_OFF : DOT_TYPE.SHORT_FLASH;
+    public static Alphabet getAlphabet() {
+        if (currentAlphabet == null) {
+            String a = sharedPrefs(context).getString(ALPHABET_KEY, "");
+            currentAlphabet = Alphabet.INTERNATIONAL_MORSE;
+
+            for (Alphabet alphabet : Alphabet.ALL) {
+                if (a.equals(alphabet.name())) {
+                    currentAlphabet = alphabet;
+                }
+            }
         }
 
-        return dotType;
+        return currentAlphabet;
     }
 
-    public static void setDotType(DOT_TYPE dotType) {
-        Settings.dotType = dotType;
-        save(context, DOT_TYPE_KEY, dotType == DOT_TYPE.FLASH_OFF);
-
+    public static void setAlphabet(Alphabet alphabet) {
+        Settings.currentAlphabet = alphabet;
+        save(context, ALPHABET_KEY, alphabet.name());
     }
 
 
@@ -104,6 +106,15 @@ public class Settings {
             result = context.getResources().getDimensionPixelSize(resourceId);
         }
         return result;
+    }
+
+    private static Vibrator vibrator;
+    public static void vibrate(int ms) {
+        if (null == vibrator) {
+            vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+
+        vibrator.vibrate(ms);
     }
 
     private static boolean hasNavBar(Context context) {

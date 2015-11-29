@@ -8,7 +8,7 @@ import java.util.List;
 import morse.morseapp.utilities.Settings;
 
 /**
- * Created by ekreutzman on 26/10/15.
+ * Send morse messages by using the camera flash.
  */
 public class Sender {
     private static Alphabet alphabet;
@@ -16,6 +16,7 @@ public class Sender {
     private static int unitLength = 1000 / 5;
 
     private static boolean sending = false;
+    private static boolean vibrateOnDone = true;
     private static Handler handler = new Handler();
     private static Iterator<Byte> iterator;
 
@@ -25,6 +26,10 @@ public class Sender {
 
     public static void setTorch(Torch torch) {
         Sender.torch = torch;
+    }
+
+    public static void setVibrateOnDone(boolean vibrateOnDone) {
+        Sender.vibrateOnDone = vibrateOnDone;
     }
 
     private static final Runnable flasher = new Runnable() {
@@ -44,6 +49,9 @@ public class Sender {
             } else {
                 torch.turnOff();
                 sending = false;
+
+                if (vibrateOnDone)
+                    Settings.vibrate(50);
             }
         }
     };
