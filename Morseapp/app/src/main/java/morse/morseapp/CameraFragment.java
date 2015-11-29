@@ -41,6 +41,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -59,6 +60,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import morse.morseapp.message.Torch;
+import morse.morseapp.utilities.Settings;
 
 /**
  * Modified version of Google's Camera2BasicFragment.
@@ -78,6 +80,11 @@ public class CameraFragment extends Fragment implements Torch {
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
+
+    /**
+     * Manual exposure time in nanoseconds.
+     */
+    private static final long PREFERRED_MANUAL_EXPOSURE_TIME = 1000000000 / 300;
 
     /**
      * Tag for the {@link Log}.
@@ -234,6 +241,9 @@ public class CameraFragment extends Fragment implements Torch {
      */
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
+
+    private Range<Long> mExposureTimeRange;
+
     /**
      * Shows a {@link Toast} on the UI thread.
      *
@@ -359,13 +369,17 @@ public class CameraFragment extends Fragment implements Torch {
                     continue;
                 }
 
-                int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 
                 StreamConfigurationMap map = characteristics.get(
                         CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 if (map == null) {
                     continue;
                 }
+
+                mExposureTimeRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+                Settings.setSupportsManualExposure(mExposureTimeRange != null);
+
+                int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 
                 // find sensor size
                 if (null == mSensorSize) {
@@ -612,13 +626,21 @@ public class CameraFragment extends Fragment implements Torch {
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_AUTO);
 
-                                // auto-exposure on.
-                                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                                        CaptureRequest.CONTROL_AE_MODE_ON);
-
                                 // flash initially turned off.
                                 mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE,
                                         CaptureRequest.FLASH_MODE_OFF);
+
+                                if (null == mExposureTimeRange || Settings.autoExposure()) {
+                                    // auto-exposure on.
+                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                            CaptureRequest.CONTROL_AE_MODE_ON);
+                                } else {
+                                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                                            CaptureRequest.CONTROL_AE_MODE_OFF);
+
+                                    mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, mExposureTimeRange.clamp(PREFERRED_MANUAL_EXPOSURE_TIME));
+                                    //mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME);
+                                }
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();

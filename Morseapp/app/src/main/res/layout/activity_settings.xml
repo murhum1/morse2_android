@@ -83,4 +83,36 @@
             android:text="Use international morse"
             android:enabled="true" />
     </RadioGroup>
+
+    <TextView
+        style="@style/AppTheme.SettingsTitle"
+        android:id="@+id/exposure_title"
+        android:text="Exposure"
+        android:layout_below="@id/radio_group_alphabet"
+        />
+
+    <RadioGroup
+        android:id="@+id/radio_group_exposure"
+        android:layout_below="@id/exposure_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/spacing_small"
+        android:layout_marginTop="@dimen/spacing_normal"
+        >
+
+        <RadioButton
+            android:id="@+id/radio_button_exposure_auto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Automatic exposure"
+            android:enabled="true"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radio_button_exposure_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Low exposure"
+            android:enabled="true" />
+    </RadioGroup>
 </RelativeLayout>

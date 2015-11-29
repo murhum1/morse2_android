@@ -3,12 +3,7 @@ package morse.morseapp.utilities;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Vibrator;
-import android.provider.MediaStore;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
@@ -28,7 +23,13 @@ public class Settings {
     private static final String CHARS_PER_SECOND_KEY = "chars_per_second";
 
     private static Alphabet currentAlphabet;
-    private static String ALPHABET_KEY = "alphabet";
+    private static final String ALPHABET_KEY = "alphabet";
+
+    private static Boolean autoExpose;
+    private static final String EXPOSURE_KEY = "exposure";
+
+
+    private static boolean supportsManualExposure = false;
 
     /** getters and setters for settings */
 
@@ -70,6 +71,20 @@ public class Settings {
     public static void setAlphabet(Alphabet alphabet) {
         Settings.currentAlphabet = alphabet;
         save(context, ALPHABET_KEY, alphabet.name());
+    }
+
+
+    public static boolean autoExposure() {
+        if (autoExpose == null) {
+            autoExpose = sharedPrefs(context).getBoolean(EXPOSURE_KEY, true);
+        }
+
+        return autoExpose;
+    }
+
+    public static void setAutoExposure(boolean autoExpose) {
+        Settings.autoExpose = autoExpose;
+        save(context, EXPOSURE_KEY, Settings.autoExpose);
     }
 
 
@@ -127,5 +142,13 @@ public class Settings {
             boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
             return !hasMenuKey && !hasBackKey;
         }
+    }
+
+    public static boolean getSupportsManualExposure() {
+        return supportsManualExposure;
+    }
+
+    public static void setSupportsManualExposure(boolean supportsManualExposure) {
+        Settings.supportsManualExposure = supportsManualExposure;
     }
 }
