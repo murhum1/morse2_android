@@ -134,8 +134,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         int w = img.getWidth();
         int h = img.getHeight();
         int s = 10;
-        Rect mid = new Rect(0, 0, s, s);
-        mid.offset((w - s) / 2, (h - s) / 2);
+        Rect mid = new Rect(0, 0, s * 3, s);
+        mid.offset((w - mid.width()) / 2, (h - mid.height()) / 2);
         ArrayList<Rect> rects = new ArrayList<>();
 
         /* we add one rectangle that covers the Image fully, and one small one in the center. */

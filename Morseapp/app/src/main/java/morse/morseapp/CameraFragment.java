@@ -87,6 +87,11 @@ public class CameraFragment extends Fragment implements Torch {
     private static final long PREFERRED_MANUAL_EXPOSURE_TIME = 1000000000 / 300;
 
     /**
+     * Preferred size for the imageReader
+     */
+    private static final Size PREFERRED_IMAGE_READER_SIZE = new Size(500, 375); // 4:3
+
+    /**
      * Tag for the {@link Log}.
      */
     private static final String TAG = "CameraFragment";
@@ -280,20 +285,26 @@ public class CameraFragment extends Fragment implements Torch {
     private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
                                           int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
 
-        // Collect the supported resolutions that are at least as big as the preview Surface
+        // Collect the supported resolutions that are at least as big as the preview Surface and the right aspect ratio
         List<Size> bigEnough = new ArrayList<>();
-        // Collect the supported resolutions that are smaller than the preview Surface
+        // Collect the supported resolutions that are smaller than the preview Surface and the right aspect ratio
         List<Size> notBigEnough = new ArrayList<>();
+        // Collect the supported resolutions that are smaller than the preview Surface and almost the right aspect ratio
+        List<Size> almostGood = new ArrayList<>();
+
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
         for (Size option : choices) {
-            if (option.getWidth() <= maxWidth && option.getHeight() <= maxHeight &&
-                    option.getHeight() == option.getWidth() * h / w) {
-                if (option.getWidth() >= textureViewWidth &&
-                        option.getHeight() >= textureViewHeight) {
-                    bigEnough.add(option);
-                } else {
-                    notBigEnough.add(option);
+            if (option.getWidth() <= maxWidth && option.getHeight() <= maxHeight) {
+                if (option.getHeight() == option.getWidth() * h / w) {
+                    if (option.getWidth() >= textureViewWidth &&
+                            option.getHeight() >= textureViewHeight) {
+                        bigEnough.add(option);
+                    } else {
+                        notBigEnough.add(option);
+                    }
+                } else if (Math.abs(option.getHeight() / (float) option.getWidth() - h / (float) w) < 0.05) {
+                    almostGood.add(option);
                 }
             }
         }
@@ -304,7 +315,10 @@ public class CameraFragment extends Fragment implements Torch {
             return Collections.min(bigEnough, new CompareSizesByArea());
         } else if (notBigEnough.size() > 0) {
             return Collections.max(notBigEnough, new CompareSizesByArea());
-        } else {
+        } else if (almostGood.size() > 0) {
+            return Collections.max(almostGood, new CompareSizesByArea());
+        }
+        else {
             Log.e(TAG, "Couldn't find any suitable preview size");
             return choices[0];
         }
@@ -395,8 +409,7 @@ public class CameraFragment extends Fragment implements Torch {
 
                 Size[] sizeChoices = map.getOutputSizes(ImageFormat.YUV_420_888);
 
-                // We set 400x300 as our reference for imageReader images.
-                mReadSize = getImageReaderSize(sizeChoices, new Size(400, 300), sensorOrientation);
+                mReadSize = getImageReaderSize(sizeChoices, PREFERRED_IMAGE_READER_SIZE, sensorOrientation);
 
                 mImageReader = ImageReader.newInstance(mReadSize.getWidth(), mReadSize.getHeight(),
                         ImageFormat.YUV_420_888, /*maxImages*/2);
