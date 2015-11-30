@@ -46,11 +46,11 @@ namespace FW {
 
 			lastBlinkerID = 0;
 			stabilize_image = false;
-			downscalefactor_slider = 1;
+			downscalefactor_slider = 2;
 			pointsearch_min = 1;
 			pointsearch_max = 4;
 
-			lightsearch_threshold = .06f;
+			lightsearch_threshold = .08f;
 			shadowCutOff = .6f;
 		}
 

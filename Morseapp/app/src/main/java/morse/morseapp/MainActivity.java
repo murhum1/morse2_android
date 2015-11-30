@@ -133,19 +133,35 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
         int w = img.getWidth();
         int h = img.getHeight();
+        int fullw = mCameraFragment.getView().getWidth();
+        int fullh = mCameraFragment.getView().getHeight();
         int s = 10;
         Rect mid = new Rect(0, 0, s, s);
         mid.offset((w - s) / 2, (h - s) / 2);
         ArrayList<Rect> rects = new ArrayList<>();
+        ArrayList<DrawText> texts = new ArrayList<>();
 
-        /* we add one rectangle that covers the Image fully, and one small one in the center. */
-        rects.add(new Rect(0, 0, w, h));
         for(LightPostProcessor.Blinker b : lightProcessor.blinkers)
         {
-            rects.add(new Rect((int)b.y, (int)b.x, (int)(b.y+b.size), (int)(b.x+b.size)));
+            //if(b.lastSeenFrame != lightProcessor.frameNumber)
+               // continue;
+            float curx = h-(float)b.y;
+            float cury = (float)b.x;
+            curx *= (float)fullw / w;
+            cury *= (float)fullh / h;
+            float size_scaled = (float)(b.size * fullh) / h;
+            rects.add(new Rect((int) curx, (int) cury, (int) (curx + size_scaled), (int) (cury + size_scaled)));
+
+            if(null != b.message) {
+                DrawText tx = new DrawText((int)curx,(int)cury,b.message);
+                texts.add(tx);
+            }
         }
+        rects.add(new Rect(0, 0, h, w));
+        Log.d("PROCESS", w + "x" + h);
 
         mCameraFragment.setDrawnRectangleColor(Color.RED);
+        mCameraFragment.setDrawnText(texts);
         mCameraFragment.setDrawnRectangles(rects);
     }
 

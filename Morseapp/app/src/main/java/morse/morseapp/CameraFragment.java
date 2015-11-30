@@ -403,7 +403,7 @@ public class CameraFragment extends Fragment implements Torch {
 
                 mImageReader.setOnImageAvailableListener(
                         mOnImageAvailableListener, mBackgroundHandler);
-
+                Log.d("asd", "image reader size: " + mReadSize);
                 // Find out if we need to swap dimension to get the preview size relative to sensor
                 // coordinate.
                 int displayRotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -451,9 +451,8 @@ public class CameraFragment extends Fragment implements Torch {
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
-                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                        maxPreviewHeight, new Size(rotatedPreviewWidth, rotatedPreviewHeight));
-
+                    rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                    maxPreviewHeight, new Size(rotatedPreviewWidth, rotatedPreviewHeight));
                 mCameraId = cameraId;
                 return;
             }
@@ -505,10 +504,10 @@ public class CameraFragment extends Fragment implements Torch {
         int w = 0, h = 0;
         for (Size[] sizes : choices) {
             for (Size size : sizes) {
-                if (size.getHeight() > h) {
+                if (size.getHeight() > h && size.getHeight() < 1100) {
                     h = size.getHeight();
                 }
-                if (size.getWidth() > w) {
+                if (size.getWidth() > w && size.getWidth() < 2000) {
                     w = size.getWidth();
                 }
             }
@@ -681,24 +680,18 @@ public class CameraFragment extends Fragment implements Torch {
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
         RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
+        Log.d("asd", "w: " + viewWidth + " h: " + viewHeight + " prevW: " + mPreviewSize.getWidth() + " prevH: " + mPreviewSize.getHeight());
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
 
-        if (viewWidth != viewHeight * mPreviewSize.getWidth() / mPreviewSize.getHeight()) {
-            float r1 = viewHeight / bufferRect.height();
-            float r2 = viewWidth / bufferRect.width();
-            float scale = Math.max(r1, r2);
-
-            matrix.postScale(1 / r2 * scale, 1 / r1 * scale, centerX, centerY);
-        }
 
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             matrix.postRotate(90 * (rotation - 2), centerX, centerY);
         } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
+           matrix.postRotate(180, centerX, centerY);
         }
         configureDrawRectanglesView();
-        mTextureView.setTransform(matrix);
+        //mTextureView.setTransform(matrix);
     }
 
     /**
@@ -729,6 +722,16 @@ public class CameraFragment extends Fragment implements Torch {
     public void setDrawnRectangles(ArrayList<Rect> rectangles) {
         if (null != mDrawRectanglesView)
             mDrawRectanglesView.setRectangles(rectangles);
+    }
+
+    /**
+     *
+     * @param asd
+     */
+
+    public void setDrawnText(ArrayList<DrawText> texts) {
+        if (null != mDrawRectanglesView)
+            mDrawRectanglesView.setTexts(texts);
     }
 
     /**

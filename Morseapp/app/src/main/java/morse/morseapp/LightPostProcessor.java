@@ -1,11 +1,13 @@
 package morse.morseapp;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 public class LightPostProcessor {
 
     public ArrayList<Blinker> blinkers = new ArrayList<Blinker>();
-    public double light_min_distance = 1.61;
+    public double light_min_distance = 2.61;
     public double light_merge_threshold;
     public int frameNumber = 0;
 
@@ -14,6 +16,7 @@ public class LightPostProcessor {
         double x, y, brightness, size, mass;
         int ID, lastSeenFrame;
         boolean remove = false;
+        String message = "";
         ArrayList<Boolean> history = new ArrayList<Boolean>();
 
         public Blinker(DetectedLight light, int frame)
@@ -188,6 +191,10 @@ public class LightPostProcessor {
                     s += ".";
                 else if (len < 15)
                     s += "-";
+            }
+            if (s.length() > 2) {
+                p.message = s;
+                Log.i("asdasd", s);
             }
         }
     }

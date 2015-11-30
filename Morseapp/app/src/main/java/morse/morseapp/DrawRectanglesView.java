@@ -9,6 +9,7 @@ import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.Size;
 import android.view.View;
 
@@ -21,6 +22,8 @@ import java.util.List;
  *
  * [current implementation in fragment_camera.xml]
  */
+
+
 public class DrawRectanglesView extends View {
     public DrawRectanglesView(Context context) {
         super(context);
@@ -57,6 +60,11 @@ public class DrawRectanglesView extends View {
         uiHandler = new Handler(Looper.getMainLooper());
     }
 
+    public void setTexts(ArrayList<DrawText> texts) {
+        mDrawTexts = texts;
+        mPaint.setTextSize(72);
+    }
+
     // original rectangles, in processed image coordinates
     private ArrayList<Rect> mImageRectangles;
 
@@ -64,16 +72,26 @@ public class DrawRectanglesView extends View {
     // these are the rectangles that will actually be drawn by this view.
     private ArrayList<RectF> mViewRectangles;
 
+    private ArrayList<DrawText> mDrawTexts;
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
         List<RectF> rectangles = mViewRectangles;
-        if (null != rectangles && !rectangles.isEmpty()) {
+        if (rectangles != null && !rectangles.isEmpty()) {
 
             for (RectF r : rectangles) {
-                if (!canvas.quickReject(r, Canvas.EdgeType.BW))
+                if (!canvas.quickReject(r, Canvas.EdgeType.BW));
                     drawRectOutline(canvas, r, LINE_WIDTH_DP * mDensity, mPaint);
+            }
+        }
+
+        if (null != mDrawTexts) {
+            for(DrawText tx : mDrawTexts) {
+                canvas.drawText("TEST-------------------------------------------", (float)50, (float)50, mPaint);
+                canvas.drawText(tx.str, (float)tx.x, (float)tx.y, mPaint);
+                Log.d("asdasd", tx.str + " " + tx.x + ", " + tx.y);
             }
         }
     }
@@ -87,39 +105,14 @@ public class DrawRectanglesView extends View {
      * @param previewSize: the current size of the camera stream preview
      */
     public void setToViewTransform(Size sensorSize, Size imageSize, Size previewSize) {
-        /**
-         * 1. Calculate the transformation matrix from the image to the preview.
-         *    The calculation is based on the assumption that both sizes fill up as much as they can, of the sensor and are placed in the middle)
-         *    (Eg if the sensor is 4:3, and our previewSize is 1920x1080 (16:9), it can't fill the whole sensor space)
-         */
-        float scale1 = Math.min(sensorSize.getHeight() / (float) imageSize.getHeight(), sensorSize.getWidth() / (float) imageSize.getWidth());
-        float scale2 = Math.min(sensorSize.getHeight() / (float) previewSize.getHeight(), sensorSize.getWidth() / (float) previewSize.getWidth());
 
-        float s = scale1 / scale2;
+        Matrix m = new Matrix();
 
-        RectF ir = new RectF(0, 0, imageSize.getWidth() * s, imageSize.getHeight() * s);
-        RectF vr = new RectF(0, 0, previewSize.getWidth(), previewSize.getHeight());
-
-        Matrix imageToPreview = new Matrix();
-        imageToPreview.postScale(s, s);
-        imageToPreview.postTranslate((vr.width() - ir.width()) / 2, (vr.height() - ir.height()) / 2);
-
-        /**
-         * 2. Calculate the transform from the preview to the view.
-         *    This calculation assumes that the preview stream covers the whole view, and that it is center-aligned.
-         */
-        Matrix previewToView = new Matrix();
-        float scale3 = Math.max(this.getWidth() / (float) previewSize.getWidth(), this.getHeight() / (float) previewSize.getHeight());
-        previewToView.postScale(scale3, scale3);
-        previewToView.preTranslate((this.getWidth() / scale3 - previewSize.getWidth()) / 2, (this.getHeight() / scale3 - previewSize.getHeight()) / 2);
-
-        /**
-         * 3. Concatenate (matrix multiply) the two matrices to get a full image to view transform.
-         */
-        Matrix imageToView = new Matrix(imageToPreview);
-        imageToView.postConcat(previewToView);
-
-        this.mMatrixImageToView.set(imageToView);
+        float scale_x = (float)imageSize.getWidth() / getHeight();
+        float scale_y = (float)imageSize.getHeight() / getWidth();
+        Log.d("asd", getWidth() + "x" + getHeight());
+        m.postScale(1.0f / scale_x, 1.0f / scale_y);
+        //this.mMatrixImageToView.set(m);
         mapRectangles();
     }
 
@@ -146,7 +139,7 @@ public class DrawRectanglesView extends View {
 
             for (Rect r : originals) {
                 RectF dest = new RectF(r);
-                this.mMatrixImageToView.mapRect(dest);
+                //this.mMatrixImageToView.mapRect(dest);
                 mapped.add(dest);
             }
 
