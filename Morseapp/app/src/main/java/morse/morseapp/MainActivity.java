@@ -117,7 +117,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         plane0.get(Y);
 
         int[] lights = getLights(Y, img.getWidth(), img.getHeight());
-
+        lightProcessor.ProcessLights(lights);
 
         /**
          * Below, some test code for rectangle display!
@@ -127,15 +127,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
             return;
 
         //debugVarRects = true;
-
-        lightProcessor.ProcessLights(lights); // Run light postprocess, merging found lights to previously seen blinkers
-
         Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
         int w = img.getWidth();
         int h = img.getHeight();
         int fullw = mCameraFragment.getView().getWidth();
         int fullh = mCameraFragment.getView().getHeight();
         int s = 10;
+
         Rect mid = new Rect(0, 0, s, s);
         mid.offset((w - s) / 2, (h - s) / 2);
         ArrayList<Rect> rects = new ArrayList<>();
