@@ -11,6 +11,7 @@ import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.Size;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,23 +83,30 @@ public class DrawRectanglesView extends View {
      * Sets the transformation matrix of this view, so that rectangles can be drawn correctly.
      * Note: this method assumes that the size of this view (rectlayout) is the same as the corresponding texture view.
      *
-     * @param sensorSize: the maximum image size produces by the sensor (both imageSize and viewSize fit into the sensor's aspect ratio)
+     * @param cropRegion: the crop region of this stream, to which all sub-streams are center-cropped, as specified by:
+     *                    http://developer.android.com/reference/android/hardware/camera2/CaptureRequest.html#SCALER_CROP_REGION
      * @param imageSize: the image size which should be mapped to view (the rectangles are in this coordinate system)
      * @param previewSize: the current size of the camera stream preview
      */
-    public void setToViewTransform(Size sensorSize, Size imageSize, Size previewSize) {
+    public void setToViewTransform(Size cropRegion, Size imageSize, Size previewSize, int sensorRotation) {
         /**
          * 1. Calculate the transformation matrix from the image to the preview.
-         *    The calculation is based on the assumption that both sizes fill up as much as they can, of the sensor and are placed in the middle)
+         *    The streams are center-cropped (cropped and move to the center of the crop region)
          *    (Eg if the sensor is 4:3, and our previewSize is 1920x1080 (16:9), it can't fill the whole sensor space)
          */
-        float scale1 = Math.min(sensorSize.getHeight() / (float) imageSize.getHeight(), sensorSize.getWidth() / (float) imageSize.getWidth());
-        float scale2 = Math.min(sensorSize.getHeight() / (float) previewSize.getHeight(), sensorSize.getWidth() / (float) previewSize.getWidth());
+        float scale1 = Math.min(cropRegion.getHeight() / (float) imageSize.getHeight(), cropRegion.getWidth() / (float) imageSize.getWidth());
+        float scale2 = Math.min(cropRegion.getHeight() / (float) previewSize.getHeight(), cropRegion.getWidth() / (float) previewSize.getWidth());
 
         float s = scale1 / scale2;
 
         RectF ir = new RectF(0, 0, imageSize.getWidth() * s, imageSize.getHeight() * s);
         RectF vr = new RectF(0, 0, previewSize.getWidth(), previewSize.getHeight());
+
+        float w1 = ir.width();
+        float w2 = vr.width();
+
+        float h1 = ir.height();
+        float h2 = vr.height();
 
         Matrix imageToPreview = new Matrix();
         imageToPreview.postScale(s, s);
@@ -108,16 +116,35 @@ public class DrawRectanglesView extends View {
          * 2. Calculate the transform from the preview to the view.
          *    This calculation assumes that the preview stream covers the whole view, and that it is center-aligned.
          */
+        boolean swappedDimensions = sensorRotation % 180 != 0;
+        int viewWidth = (swappedDimensions) ? this.getHeight() : this.getWidth();
+        int viewHeight = (swappedDimensions) ? this.getWidth() : this.getHeight();
+
         Matrix previewToView = new Matrix();
-        float scale3 = Math.max(this.getWidth() / (float) previewSize.getWidth(), this.getHeight() / (float) previewSize.getHeight());
+        float scale3 = Math.max(viewWidth / (float) previewSize.getWidth(), viewHeight / (float) previewSize.getHeight());
         previewToView.postScale(scale3, scale3);
-        previewToView.preTranslate((this.getWidth() / scale3 - previewSize.getWidth()) / 2, (this.getHeight() / scale3 - previewSize.getHeight()) / 2);
+        previewToView.postTranslate((viewWidth - previewSize.getWidth() * scale3) / 2, (viewHeight - previewSize.getHeight() * scale3) / 2);
+
+        Toast.makeText(getContext(), "Rotated: " + sensorRotation, Toast.LENGTH_LONG).show();
 
         /**
          * 3. Concatenate (matrix multiply) the two matrices to get a full image to view transform.
          */
         Matrix imageToView = new Matrix(imageToPreview);
         imageToView.postConcat(previewToView);
+
+        int rotation = sensorRotation;
+        if (rotation != 0) {
+            float min = Math.min(viewHeight, viewWidth) / 2f;
+            if (rotation % 180 == 90) {
+                imageToView.postRotate(90, min, min);
+                rotation -= 90;
+            }
+
+            if (rotation == 180) {
+                imageToView.postRotate(180, this.getWidth() / 2f, this.getHeight() / 2f);
+            }
+        }
 
         this.mMatrixImageToView.set(imageToView);
         mapRectangles();

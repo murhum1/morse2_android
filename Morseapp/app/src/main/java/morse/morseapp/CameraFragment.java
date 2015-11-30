@@ -155,9 +155,10 @@ public class CameraFragment extends Fragment implements Torch {
     private CameraDevice mCameraDevice;
 
     /**
-     * The {@link android.util.Size} the maximum resolution this sensor can capture (main camera).
+     * The {@link android.util.Size} the maximum crop region size.
+     * (http://developer.android.com/reference/android/hardware/camera2/CaptureRequest.html#SCALER_CROP_REGION)
      */
-    private Size mSensorSize;
+    private Size mCropRegion;
 
     /**
      * The {@link android.util.Size} of camera preview.
@@ -169,6 +170,12 @@ public class CameraFragment extends Fragment implements Torch {
      */
     private Size mReadSize;
 
+
+    /**
+     * The rotation of the camera module
+     * * (eg if swapped is true, then the camera's "width" units will be shown vertically ("height") on the screen)
+     */
+    private Integer mSensorOrientation;
 
     /**
      * The rectangle drawing view that will be on top of the camera stream.
@@ -289,8 +296,6 @@ public class CameraFragment extends Fragment implements Torch {
         List<Size> bigEnough = new ArrayList<>();
         // Collect the supported resolutions that are smaller than the preview Surface and the right aspect ratio
         List<Size> notBigEnough = new ArrayList<>();
-        // Collect the supported resolutions that are smaller than the preview Surface and almost the right aspect ratio
-        List<Size> almostGood = new ArrayList<>();
 
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
@@ -303,8 +308,6 @@ public class CameraFragment extends Fragment implements Torch {
                     } else {
                         notBigEnough.add(option);
                     }
-                } else if (Math.abs(option.getHeight() / (float) option.getWidth() - h / (float) w) < 0.05) {
-                    almostGood.add(option);
                 }
             }
         }
@@ -315,13 +318,39 @@ public class CameraFragment extends Fragment implements Torch {
             return Collections.min(bigEnough, new CompareSizesByArea());
         } else if (notBigEnough.size() > 0) {
             return Collections.max(notBigEnough, new CompareSizesByArea());
-        } else if (almostGood.size() > 0) {
-            return Collections.max(almostGood, new CompareSizesByArea());
-        }
-        else {
+        } else {
             Log.e(TAG, "Couldn't find any suitable preview size");
-            return choices[0];
+            return null;
         }
+    }
+
+    /**
+     * Choose a sufficiently large image that has the same aspect ratio as the sensor.
+     */
+    private Size chooseSufficientSize(Size[] choices, int viewWidth, int viewHeight) {
+        int sw = mCropRegion.getWidth();
+        int sh = mCropRegion.getHeight();
+
+        List<Size> smallEnough = new ArrayList<>();
+        List<Size> tooBig = new ArrayList<>();
+
+        for (Size s : choices) {
+            if (sw == sh * s.getWidth() / s.getHeight()) {
+                if (s.getHeight() * s.getWidth() <= viewHeight * viewWidth) {
+                    smallEnough.add(s);
+                } else {
+                    tooBig.add(s);
+                }
+            }
+        }
+
+        if (!smallEnough.isEmpty()) {
+            return Collections.max(smallEnough, new CompareSizesByArea());
+        } else if (!tooBig.isEmpty()) {
+            return Collections.min(tooBig, new CompareSizesByArea());
+        }
+
+        return null;
     }
 
     public static CameraFragment newInstance() {
@@ -374,15 +403,13 @@ public class CameraFragment extends Fragment implements Torch {
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraId : manager.getCameraIdList()) {
-                CameraCharacteristics characteristics
-                        = manager.getCameraCharacteristics(cameraId);
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
 
                 // We don't use a front facing camera in this sample.
                 Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
                 if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
                     continue;
                 }
-
 
                 StreamConfigurationMap map = characteristics.get(
                         CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -393,29 +420,10 @@ public class CameraFragment extends Fragment implements Torch {
                 mExposureTimeRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
                 Settings.setSupportsManualExposure(mExposureTimeRange != null);
 
-                int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 
-                // find sensor size
-                if (null == mSensorSize) {
-                    int formatsNumber = map.getOutputFormats().length;
-                    Size[][] allSizes = new Size[formatsNumber][];
-
-                    for (int i = 0; i < formatsNumber; i++) {
-                        allSizes[i] = map.getOutputSizes(map.getOutputFormats()[i]);
-                    }
-
-                    mSensorSize = getSensorSize(allSizes);
-                }
-
-                Size[] sizeChoices = map.getOutputSizes(ImageFormat.YUV_420_888);
-
-                mReadSize = getImageReaderSize(sizeChoices, PREFERRED_IMAGE_READER_SIZE, sensorOrientation);
-
-                mImageReader = ImageReader.newInstance(mReadSize.getWidth(), mReadSize.getHeight(),
-                        ImageFormat.YUV_420_888, /*maxImages*/2);
-
-                mImageReader.setOnImageAvailableListener(
-                        mOnImageAvailableListener, mBackgroundHandler);
+                // we set the crop region here as a backup if the phone doesn't support getting the crop region via the API (as set later on)
+                mCropRegion = getSensorSize(characteristics);
 
                 // Find out if we need to swap dimension to get the preview size relative to sensor
                 // coordinate.
@@ -424,13 +432,13 @@ public class CameraFragment extends Fragment implements Torch {
                 switch (displayRotation) {
                     case Surface.ROTATION_0:
                     case Surface.ROTATION_180:
-                        if (sensorOrientation == 90 || sensorOrientation == 270) {
+                        if (mSensorOrientation == 90 || mSensorOrientation == 270) {
                             swappedDimensions = true;
                         }
                         break;
                     case Surface.ROTATION_90:
                     case Surface.ROTATION_270:
-                        if (sensorOrientation == 0 || sensorOrientation == 180) {
+                        if (mSensorOrientation == 0 || mSensorOrientation == 180) {
                             swappedDimensions = true;
                         }
                         break;
@@ -463,9 +471,27 @@ public class CameraFragment extends Fragment implements Torch {
                 // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
-                mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                Size[] choices = map.getOutputSizes(SurfaceTexture.class);
+
+                mPreviewSize = chooseOptimalSize(choices,
                         rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
                         maxPreviewHeight, new Size(rotatedPreviewWidth, rotatedPreviewHeight));
+
+                if (null == mPreviewSize) {
+                    mPreviewSize = chooseSufficientSize(choices, rotatedPreviewWidth, rotatedPreviewHeight);
+                }
+
+                Size[] sizeChoices = map.getOutputSizes(ImageFormat.YUV_420_888);
+
+                Size preferred = (swappedDimensions) ? new Size(PREFERRED_IMAGE_READER_SIZE.getHeight(), PREFERRED_IMAGE_READER_SIZE.getWidth()) : PREFERRED_IMAGE_READER_SIZE;
+
+                mReadSize = getImageReaderSize(sizeChoices, preferred);
+
+                mImageReader = ImageReader.newInstance(mReadSize.getWidth(), mReadSize.getHeight(),
+                        ImageFormat.YUV_420_888, /*maxImages*/2);
+
+                mImageReader.setOnImageAvailableListener(
+                        mOnImageAvailableListener, mBackgroundHandler);
 
                 mCameraId = cameraId;
                 return;
@@ -484,24 +510,14 @@ public class CameraFragment extends Fragment implements Torch {
      * From the list of possible size alternatives for this camera, find the most suitable one for our purposes.
      * This is done by finding the size that most closely matches (euclidean distance and ratio vicinity) our preferred size.
      */
-    private Size getImageReaderSize(Size[] choices, Size reference, int sensorOrientation) {
-        boolean portraitSensor = sensorOrientation == 0 || sensorOrientation == 180;
-        boolean portraitReference = reference.getHeight() > reference.getWidth();
-
-        final Size ref; // = new Size(reference.getWidth(), reference.getHeight());
-        if (portraitSensor == portraitReference) {
-            ref = reference;
-        } else {
-            ref = new Size(reference.getHeight(), reference.getWidth());
-        }
-
-        final double referenceRatio = ref.getWidth() * 1.0 / ref.getHeight();
+    private Size getImageReaderSize(Size[] choices, final Size reference) {
+        final double referenceRatio = reference.getWidth() * 1.0 / reference.getHeight();
 
         return Collections.min(Arrays.asList(choices), new Comparator<Size>() {
             @Override
             public int compare(Size lhs, Size rhs) {
-                double e1 = Math.hypot(ref.getWidth() - lhs.getWidth(), ref.getHeight() - lhs.getHeight());
-                double e2 = Math.hypot(ref.getWidth() - rhs.getWidth(), ref.getHeight() - rhs.getHeight());
+                double e1 = Math.hypot(reference.getWidth() - lhs.getWidth(), reference.getHeight() - lhs.getHeight());
+                double e2 = Math.hypot(reference.getWidth() - rhs.getWidth(), reference.getHeight() - rhs.getHeight());
                 double r1 = Math.abs((lhs.getWidth() * 1.0 / lhs.getHeight()) - referenceRatio);
                 double r2 = Math.abs((rhs.getWidth() * 1.0 / rhs.getHeight()) - referenceRatio);
 
@@ -514,20 +530,22 @@ public class CameraFragment extends Fragment implements Torch {
         });
     }
 
-    private Size getSensorSize(Size[][] choices) {
-        int w = 0, h = 0;
-        for (Size[] sizes : choices) {
+    private Size getSensorSize(CameraCharacteristics characteristics) {
+        StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+        int[] formats = map.getOutputFormats();
+
+        int maxW = 0, maxH = 0;
+
+        for (int format : formats) {
+            Size[] sizes = map.getOutputSizes(format);
+
             for (Size size : sizes) {
-                if (size.getHeight() > h) {
-                    h = size.getHeight();
-                }
-                if (size.getWidth() > w) {
-                    w = size.getWidth();
-                }
+                maxW = Math.max(size.getWidth(), maxW);
+                maxH = Math.max(size.getHeight(), maxH);
             }
         }
 
-        return new Size(w, h);
+        return new Size(maxW, maxH);
     }
 
     /**
@@ -623,8 +641,6 @@ public class CameraFragment extends Fragment implements Torch {
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
-
-
                         @Override
                         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                             // The camera is already closed
@@ -657,6 +673,17 @@ public class CameraFragment extends Fragment implements Torch {
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
+
+                                // assign the crop region of this stream
+                                Rect cropRegion = mPreviewRequest.get(CaptureRequest.SCALER_CROP_REGION);
+
+                                if (cropRegion != null) {
+                                    mCropRegion = new Size(cropRegion.width(), cropRegion.height());
+                                }
+
+                                // update draw rectangles view based on the new crop region
+                                configureDrawRectanglesView();
+
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest,
                                         /*mCaptureCallback*/null, null);
                             } catch (CameraAccessException e) {
@@ -690,27 +717,24 @@ public class CameraFragment extends Fragment implements Torch {
             return;
         }
 
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        int prevWidth = (mSensorOrientation % 180 == 0) ? mPreviewSize.getWidth() : mPreviewSize.getHeight();
+        int prevHeight = (mSensorOrientation % 180 == 0) ? mPreviewSize.getHeight() : mPreviewSize.getWidth();
+
         Matrix matrix = new Matrix();
         RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
+        RectF bufferRect = new RectF(0, 0, prevWidth, prevHeight);
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
 
-        if (viewWidth != viewHeight * mPreviewSize.getWidth() / mPreviewSize.getHeight()) {
+        if (viewWidth != viewHeight * prevWidth / prevHeight) {
             float r1 = viewHeight / bufferRect.height();
             float r2 = viewWidth / bufferRect.width();
             float scale = Math.max(r1, r2);
 
-            matrix.postScale(1 / r2 * scale, 1 / r1 * scale, centerX, centerY);
+            //matrix.postScale(0.8f, 0.8f, centerX, centerY);
+            //matrix.postScale(scale / , scale, centerX, centerY);
         }
 
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
-        }
-        configureDrawRectanglesView();
         mTextureView.setTransform(matrix);
     }
 
@@ -719,10 +743,12 @@ public class CameraFragment extends Fragment implements Torch {
      * This method should be called each time the preview size or the image size changes.
      */
     private void configureDrawRectanglesView() {
-        int w = mImageReader.getWidth();
-        int h = mImageReader.getHeight();
+        if (null != mCropRegion && null != mPreviewSize) {
+            int w = mImageReader.getWidth();
+            int h = mImageReader.getHeight();
 
-        mDrawRectanglesView.setToViewTransform(mSensorSize, new Size(w, h), mPreviewSize);
+            mDrawRectanglesView.setToViewTransform(mCropRegion, new Size(w, h), mPreviewSize, mSensorOrientation);
+        }
     }
 
     /**
