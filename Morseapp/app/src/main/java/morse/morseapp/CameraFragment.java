@@ -755,7 +755,6 @@ public class CameraFragment extends Fragment implements Torch {
             return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
                     (long) rhs.getWidth() * rhs.getHeight());
         }
-
     }
 
     /**

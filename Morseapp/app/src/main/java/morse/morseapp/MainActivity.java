@@ -123,25 +123,24 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
          * Below, some test code for rectangle display!
          */
 
-        if (debugVarRects)
+        /*if (debugVarRects)
             return;
 
         //debugVarRects = true;
-
-        lightProcessor.ProcessLights(lights); // Run light postprocess, merging found lights to previously seen blinkers
-
         Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
         int w = img.getWidth();
         int h = img.getHeight();
         int s = 10;
         Rect mid = new Rect(0, 0, s * 3, s);
         mid.offset((w - mid.width()) / 2, (h - mid.height()) / 2);
-        ArrayList<Rect> rects = new ArrayList<>();
 
-        /* we add one rectangle that covers the Image fully, and one small one in the center. */
-        rects.add(new Rect(0, 0, w, h));
-        for(LightPostProcessor.Blinker b : lightProcessor.blinkers)
-        {
+        /* we add one rectangle that covers the Image fully, and one small one in the center.
+        rects.add(new Rect(0, 0, w, h));*/
+
+        lightProcessor.ProcessLights(lights); // Run light postprocess, merging found lights to previously seen blinkers
+
+        ArrayList<Rect> rects = new ArrayList<>();
+        for(LightPostProcessor.Blinker b : lightProcessor.blinkers) {
             rects.add(new Rect((int)b.y, (int)b.x, (int)(b.y+b.size), (int)(b.x+b.size)));
         }
 
