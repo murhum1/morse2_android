@@ -49,6 +49,7 @@ public class DrawRectanglesView extends View {
     private final Matrix mMatrixImageToView;
     private final Paint mPaint;
     private final float mDensity;
+    private ArrayList<DrawText> mDrawTexts = new ArrayList<>();
 
     Handler uiHandler;
 
@@ -77,7 +78,21 @@ public class DrawRectanglesView extends View {
                     drawRectOutline(canvas, r, LINE_WIDTH_DP * mDensity, mPaint);
             }
         }
+        if (null != mDrawTexts) {
+            for(DrawText tx : mDrawTexts) {
+                canvas.drawText("TEST-------------------------------------------", (float)50, (float)50, mPaint);
+                canvas.drawText(tx.str, (float) tx.x, (float) tx.y, mPaint);
+            }
+        }
     }
+
+    public void setTexts(ArrayList<DrawText> texts) {
+        mDrawTexts = texts;
+        mapTexts();
+        mPaint.setTextSize(72);
+    }
+
+
 
     /**
      * Sets the transformation matrix of this view, so that rectangles can be drawn correctly.
@@ -181,6 +196,16 @@ public class DrawRectanglesView extends View {
         }
 
         invalidateOnUIThread();
+    }
+
+    private void mapTexts(){
+
+        for (DrawText t : mDrawTexts) {
+            float[] p = new float[]{t.x, t.y};
+            mMatrixImageToView.mapPoints(p);
+            t.x = (int)p[0];
+            t.y = (int)p[1];
+        }
     }
 
     private final Runnable invalidator = new Runnable() {

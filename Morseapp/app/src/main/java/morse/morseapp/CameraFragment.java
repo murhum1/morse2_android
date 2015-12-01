@@ -770,6 +770,11 @@ public class CameraFragment extends Fragment implements Torch {
             mDrawRectanglesView.setRectangles(rectangles);
     }
 
+    public void setDrawnText(ArrayList<DrawText> texts) {
+        if (null != mDrawRectanglesView)
+            mDrawRectanglesView.setTexts(texts);
+    }
+
     /**
      * Compares two {@code Size}s based on their areas.
      */

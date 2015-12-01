@@ -2,6 +2,7 @@ package morse.morseapp.message;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,10 +32,10 @@ public abstract class Alphabet {
     abstract String decodeMessage(List<Boolean> bits);
 
     /** the spacing between characters in a word. In morse, this value is -3 (three units flash off) */
-    protected byte getLetterSpacing() { return 0; }
+    protected byte getLetterSpacing() { return -6; }
 
     /** the spacing between characters .-.-.. and so forth. In morse, this value is -1 (one unit flash off) */
-    protected byte getInnerCharacterSpacing() { return 0; }
+    protected byte getInnerCharacterSpacing() { return -3; }
 
     final boolean hasLetterSpacing() {
         return getLetterSpacing() != 0;
@@ -61,7 +62,7 @@ public abstract class Alphabet {
      */
 
     // map of the international morse alphabet's inner characters
-    private static final Map<Character, String> INTERNATIONAL_MORSE_MAP;
+    public static final Map<Character, String> INTERNATIONAL_MORSE_MAP;
 
     static {
         HashMap<Character, String> morseMap = new HashMap<>();
@@ -94,6 +95,19 @@ public abstract class Alphabet {
         INTERNATIONAL_MORSE_MAP = Collections.unmodifiableMap(morseMap);
     }
 
+
+    // inverse map of the international morse alphabet's inner characters
+    public static final Map<String, Character> INTERNATIONAL_MORSE_MAP_INVERSE;
+    static{
+        HashMap<String, Character> morseMap = new HashMap<>();
+
+        Iterator it = Alphabet.INTERNATIONAL_MORSE_MAP.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            morseMap.put((String)pair.getValue(), (Character)pair.getKey());
+        }
+        INTERNATIONAL_MORSE_MAP_INVERSE = morseMap;
+    }
     /**
      * Special note:
      * In international morse, a space is considered to be "7 units flash off"
@@ -159,12 +173,12 @@ public abstract class Alphabet {
 
         @Override
         protected byte getInnerCharacterSpacing() {
-            return -1;
+            return -2;
         }
 
         @Override
         protected byte getLetterSpacing() {
-            return -3;
+            return -6;
         }
     };
 

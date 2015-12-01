@@ -28,6 +28,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
     private CameraFragment mCameraFragment;
     private TextView mSendTextView;
     private LightPostProcessor lightProcessor = new LightPostProcessor();
+    private Encoder mEncoder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,15 +125,19 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
 
         /* we add one rectangle that covers the Image fully. */
         ArrayList<Rect> rects = new ArrayList<>();
+        ArrayList<DrawText> texts = new ArrayList<>();
         rects.add(new Rect(0, 0, w, h));
 
         lightProcessor.ProcessLights(lights); // Run light postprocess, merging found lights to previously seen blinkers
 
         for(LightPostProcessor.Blinker b : lightProcessor.blinkers) {
             rects.add(new Rect((int)b.x, (int)b.y, (int)(b.x+b.size), (int)(b.y+b.size)));
+            if(b.history.size() > 5)
+                texts.add(b.TranslateText(mEncoder, Alphabet.INTERNATIONAL_MORSE));
         }
 
         mCameraFragment.setDrawnRectangleColor(Color.RED);
+        mCameraFragment.setDrawnText(texts);
         mCameraFragment.setDrawnRectangles(rects);
     }
 

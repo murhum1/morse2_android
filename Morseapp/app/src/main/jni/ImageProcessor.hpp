@@ -51,7 +51,7 @@ namespace FW {
 			pointsearch_max = 4;
 
 			lightsearch_threshold = .06f;
-			shadowCutOff = .6f;
+			shadowCutOff = .5f;
 		}
 
 		~ImageProcessor(void) { }
