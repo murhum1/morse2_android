@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import morse.morseapp.utilities.Settings;
-
 /**
  * Send morse messages by using the camera flash.
  */

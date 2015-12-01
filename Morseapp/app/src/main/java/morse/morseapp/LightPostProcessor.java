@@ -1,9 +1,12 @@
 package morse.morseapp;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 import morse.morseapp.message.Alphabet;
 import morse.morseapp.message.Encoder;
+import morse.morseapp.utilities.Settings;
 
 public class LightPostProcessor {
 
@@ -13,13 +16,26 @@ public class LightPostProcessor {
     public double light_merge_threshold;
     public int frameNumber = 0;
 
+    public class BlinkerState
+    {
+        Boolean state;
+        long timeStamp;
+
+        public BlinkerState(Boolean state)
+        {
+            this.state = state;
+            timeStamp = System.currentTimeMillis();
+        }
+    }
+
     public class Blinker // class that contains information about a blinker object
     {
         double x, y, brightness, size, mass;
         int ID, lastSeenFrame;
         boolean remove = false;
-        ArrayList<Boolean> history = new ArrayList<Boolean>();
+        ArrayList<BlinkerState> history = new ArrayList<BlinkerState>();
         public String morse = "";
+        long lastSeenTime;
 
         public Blinker(DetectedLight light, int frame)
         {
@@ -29,6 +45,7 @@ public class LightPostProcessor {
             this.size = light.size;
             this.ID = light.ID;
             this.lastSeenFrame = frame;
+            this.lastSeenTime = System.currentTimeMillis();
         }
 
         public double mergeValue(double val1, double val2, double mass1, double mass2) // get weighted average of two values
@@ -70,12 +87,9 @@ public class LightPostProcessor {
                     break;
 
                 String letter = letters[letterIdx];
-                if(Alphabet.INTERNATIONAL_MORSE_MAP_INVERSE.containsKey(letter))
-                    message += Alphabet.INTERNATIONAL_MORSE_MAP_INVERSE.get(letter);
-
+                message += alphabet.getChar(letter);
                 letterIdx++;
             }
-
             return new DrawText((int)x, (int)y, message);
         }
     }
@@ -169,6 +183,8 @@ public class LightPostProcessor {
                 }
             }
         }
+        long currentTime = System.currentTimeMillis();
+        float deltaTime = 1000.0f / Settings.getCharsPerSecond();
 
         // discard blinkers that have not been seen in a while, and removed blinkers
         ArrayList<Blinker> new_blinkers = new ArrayList<Blinker>();
@@ -176,41 +192,42 @@ public class LightPostProcessor {
         {
             Blinker p = blinkers.get(i);
             p.mass = 0;
-            if (-p.lastSeenFrame + frameNumber < 15 && !p.remove)
+            if (currentTime - p.lastSeenTime < 20 * deltaTime && !p.remove)
                 new_blinkers.add(p);
         }
         blinkers.clear();
         for(Blinker p : new_blinkers)
                 blinkers.add(p);
-        //blinkers = new_blinkers;
 
         //loop over blinkers and interpret their history to strings
         for (Blinker p : blinkers)
         {
-            if(p.lastSeenFrame == frameNumber)
-                p.history.add(Boolean.TRUE);
-            else
-                p.history.add(Boolean.FALSE);
+            boolean state = p.lastSeenFrame == frameNumber;
+            p.history.add(new BlinkerState(state));
+            if(state)
+                p.lastSeenTime = currentTime;
+
             String s = "";
             for (int i = 0; i < p.history.size(); ++i){
-                boolean sign = p.history.get(i);
-                int len = 1;
+                boolean sign = p.history.get(i).state;
+                long startTime = p.history.get(i).timeStamp;
+                float len = .0f;
                 while (true){
                     if (i >= p.history.size())
                         break;
 
-                    if (p.history.get(i) == sign)
-                        len++;
+                    if (p.history.get(i).state == sign)
+                        len = p.history.get(i).timeStamp - startTime;
                     else
                         break;
                     i++;
                 }
-                if (!sign && len > 6)
+                if (!sign && len > 3*deltaTime)
                     s += " ";
                 if(sign) {
-                    if (len < 6)
+                    if (len < 1.8f*deltaTime)
                         s += ".";
-                    else if (len < 15)
+                    else if (len < 6*deltaTime)
                         s += "-";
                 }
             }

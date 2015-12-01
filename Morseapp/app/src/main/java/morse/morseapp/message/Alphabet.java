@@ -20,6 +20,8 @@ public abstract class Alphabet {
     /** Convert a word character (eg. 'a') to its inner character (dots and dashes) representation. In morse, an input 'a' should return ".-" */
     abstract String get(char c);
 
+    public abstract char getChar(String s);
+
     /**
      * convert an inner character (eg. a dot or dash) to a number of units. In morse dot returns 1 and dash returns 3
      * A positive number will signify flash on, a negative number is flash off.
@@ -34,7 +36,7 @@ public abstract class Alphabet {
     /** the spacing between characters in a word. In morse, this value is -3 (three units flash off) */
     protected byte getLetterSpacing() { return -6; }
 
-    /** the spacing between characters .-.-.. and so forth. In morse, this value is -1 (one unit flash off) */
+    /** the spacing between characters. In morse, this value is -1 (one unit flash off) */
     protected byte getInnerCharacterSpacing() { return -3; }
 
     final boolean hasLetterSpacing() {
@@ -92,6 +94,12 @@ public abstract class Alphabet {
         morseMap.put('x',"-..-");
         morseMap.put('y',"-.--");
         morseMap.put('z',"--..");
+        morseMap.put(' ',".-.-");
+        morseMap.put('#',"----");
+        morseMap.put('.',"...-.");
+        morseMap.put('!',"---.");
+        morseMap.put('?',"..--");
+        morseMap.put(',',"....-");
         INTERNATIONAL_MORSE_MAP = Collections.unmodifiableMap(morseMap);
     }
 
@@ -122,15 +130,18 @@ public abstract class Alphabet {
 
         @Override
         String get(char c) {
-            switch (c) {
-                case ' ': return " ";
-                default: {
-                    if (INTERNATIONAL_MORSE_MAP.containsKey(c))
-                        return INTERNATIONAL_MORSE_MAP.get(c);
-                    else
-                        return "";
-                }
-            }
+            if (INTERNATIONAL_MORSE_MAP.containsKey(c))
+                return INTERNATIONAL_MORSE_MAP.get(c);
+            else
+                return "";
+        }
+
+        @Override
+        public char getChar(String s) {
+            if (INTERNATIONAL_MORSE_MAP_INVERSE.containsKey(s))
+                return INTERNATIONAL_MORSE_MAP_INVERSE.get(s);
+            else
+                return '*';
         }
 
         @Override
@@ -186,6 +197,7 @@ public abstract class Alphabet {
 
     // custom mapping of characters as bits
     private static final Map<Character, String> BIT_MORSE;
+    private static final Map<String, Character> BIT_MORSE_INVERSE;
 
     static {
         HashMap<Character, String> morseMap = new HashMap<>();
@@ -219,6 +231,17 @@ public abstract class Alphabet {
         BIT_MORSE = Collections.unmodifiableMap(morseMap);
     }
 
+    static {
+        HashMap<String, Character> morseMap = new HashMap<>();
+
+        Iterator it = Alphabet.BIT_MORSE.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            morseMap.put((String)pair.getValue(), (Character)pair.getKey());
+        }
+        BIT_MORSE_INVERSE = morseMap;
+    }
+
     /**
      * A simple alphabet where letters are encoded as a sequence of bits.
      */
@@ -237,6 +260,15 @@ public abstract class Alphabet {
                 return BIT_MORSE.get(c);
             else
                 return "";
+        }
+
+        public char getChar(String s) {
+            if (BIT_MORSE_INVERSE.containsKey(s)) {
+                return BIT_MORSE_INVERSE.get(s);
+            }
+            else {
+                return '*';
+            }
         }
 
         @Override
