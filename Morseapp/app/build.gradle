@@ -8,6 +8,7 @@ android {
         ndk {
             moduleName = 'jniprocess'
             stl "stlport_shared"
+            ldLibs "log"
         }
         applicationId "morse.morseapp"
         minSdkVersion 21

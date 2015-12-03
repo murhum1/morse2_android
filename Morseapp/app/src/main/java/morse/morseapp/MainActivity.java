@@ -117,7 +117,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         ByteBuffer plane0 = img.getPlanes()[0].getBuffer();
         plane0.get(Y);
 
-        int[] lights = getLights(Y, img.getWidth(), img.getHeight());
+        int[] lights = getLights(Y, img.getWidth(), img.getHeight(), (float) Settings.getSensitivity(), (float) Settings.getCutoffInput());
 
         Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
         int w = img.getWidth();
@@ -162,5 +162,5 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         System.loadLibrary("jniprocess");
     }
 
-    private native int[] getLights(byte[] Y, int width, int height);
+    private native int[] getLights(byte[] Y, int width, int height, float lightsearch_threshold, float shadowCutOff);
 }

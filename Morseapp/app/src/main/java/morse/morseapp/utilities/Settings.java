@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
+
+import java.util.Map;
 
 import morse.morseapp.message.Alphabet;
 
@@ -28,10 +31,18 @@ public class Settings {
     private static Boolean autoExpose;
     private static final String EXPOSURE_KEY = "exposure";
 
+    private static Float sensitivity;
+    private static final String SENSITIVITY_KEY = "sensitivity";
+    private static Integer merge_distance;
+    private static final String MERGE_DISTANCE_KEY = "merge_distance";
+    private static Float cutoff_input;
+    private static final String CUTOFF_INPUT_KEY = "cutoff_input";
 
     private static boolean supportsManualExposure = false;
 
     /** getters and setters for settings */
+
+
 
     public static void setContext(Context context) {
         Settings.context = context;
@@ -87,6 +98,71 @@ public class Settings {
         save(context, EXPOSURE_KEY, Settings.autoExpose);
     }
 
+    public static void setSensitivity(Float s) {
+        Settings.sensitivity = s;
+        save(context, SENSITIVITY_KEY, Settings.sensitivity);
+    }
+
+    public static Float getSensitivity() {
+        if (sensitivity == null) {
+            Float s = sharedPrefs(context).getFloat(SENSITIVITY_KEY, 0.08f);
+            if (s == 0) sensitivity = 0.08f;
+            else sensitivity = s;
+        }
+
+        return sensitivity;
+    }
+
+    public static void setMergeDistance(Integer md) {
+        Settings.merge_distance = md;
+        save(context, MERGE_DISTANCE_KEY, Settings.merge_distance);
+    }
+
+    public static Integer getMergeDistance() {
+        if (merge_distance == null) {
+            int md = sharedPrefs(context).getInt(MERGE_DISTANCE_KEY, 10);
+            if (md == 0) merge_distance = 10;
+            else merge_distance = md;
+        }
+
+        return merge_distance;
+    }
+
+    public static void setCutoffInput(Float c) {
+        Settings.cutoff_input = c;
+        save(context, CUTOFF_INPUT_KEY, Settings.cutoff_input);
+    }
+
+    public static Float getCutoffInput() {
+        if (cutoff_input == null) {
+            Float c = sharedPrefs(context).getFloat(CUTOFF_INPUT_KEY, 0.5f);
+            if (c == 0) cutoff_input = 0.5f;
+            else cutoff_input = c;
+        }
+
+        return cutoff_input;
+    }
+
+    public static void clearDetectionParams() {
+        Log.i("clear", "clearing old detect params");
+        Map<String,?> keys = sharedPrefs(context).getAll();
+
+        for(Map.Entry<String,?> entry : keys.entrySet())
+        {
+            if ( entry.getValue().getClass().equals(Integer.class)) {
+                if (entry.getKey().equals(SENSITIVITY_KEY)) {
+                    save(context, SENSITIVITY_KEY, 0.05f);
+                    Float test = sharedPrefs(context).getFloat(SENSITIVITY_KEY, 0.1f);
+                }
+                else if (entry.getKey().equals(MERGE_DISTANCE_KEY)) {
+
+                }
+                else if (entry.getKey().equals(CUTOFF_INPUT_KEY)) {
+                    save(context, CUTOFF_INPUT_KEY, 0.5f);
+                }
+            }
+        }
+    }
 
     /** from here on down, utility methods for storing settings to disc */
 
@@ -106,6 +182,7 @@ public class Settings {
             if (value instanceof String) editor.putString(key,(String) value);
             else if (value instanceof Integer) editor.putInt(key, (Integer) value);
             else if (value instanceof Boolean) editor.putBoolean(key, (Boolean) value);
+            else if (value instanceof Float) editor.putFloat(key, (Float) value);
         }
         editor.commit();
     }

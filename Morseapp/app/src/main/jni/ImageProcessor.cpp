@@ -10,9 +10,9 @@ bool inBounds(Vec2i pos, Vec2i size)
 }
 
 
-void ImageProcessor::processImage(const char* imageData, const Vec2i& size_in)
+void ImageProcessor::processImage(const char* imageData, const Vec2i& size_in, float lightsearch_threshold, float shadowCutOff)
 {
-	blinkers.clear();
+    blinkers.clear();
 	int downscalefactor = downscalefactor_slider;
 	if (size_in != lastsize || lastdownscalefactor != downscalefactor)
 	{

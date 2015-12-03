@@ -29,7 +29,7 @@ namespace FW {
 	public:
 		int lastBlinkerID;
 
-		void processImage(const char *imageData, const Vec2i &size);
+		void processImage(const char *imageData, const Vec2i &size, float lightsearch_threshold, float shadowCutOff);
 		std::vector <blinker> blinkers;
 
 		bool stabilize_image;
@@ -38,8 +38,8 @@ namespace FW {
 		int pointsearch_min;
 		int pointsearch_max;
 
-		float lightsearch_threshold;
-		float shadowCutOff;
+		// float lightsearch_threshold;
+		// float shadowCutOff;
 		std::vector <float> sumImage;
 
 		ImageProcessor() {
@@ -50,8 +50,8 @@ namespace FW {
 			pointsearch_min = 1;
 			pointsearch_max = 4;
 
-			lightsearch_threshold = .08f;
-			shadowCutOff = .5f;
+			// lightsearch_threshold = .08f;
+			// shadowCutOff = .5f;
 		}
 
 		~ImageProcessor(void) { }

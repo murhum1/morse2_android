@@ -140,7 +140,7 @@ public class DrawRectanglesView extends View {
         previewToView.postScale(scale3, scale3);
         previewToView.postTranslate((viewWidth - previewSize.getWidth() * scale3) / 2, (viewHeight - previewSize.getHeight() * scale3) / 2);
 
-        Toast.makeText(getContext(), "Rotated: " + sensorRotation, Toast.LENGTH_LONG).show();
+        // Toast.makeText(getContext(), "Rotated: " + sensorRotation, Toast.LENGTH_LONG).show();
 
         /**
          * 3. Concatenate (matrix multiply) the two matrices to get a full image to view transform.

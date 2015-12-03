@@ -12,7 +12,6 @@ public class LightPostProcessor {
 
     public ArrayList<Blinker> blinkers = new ArrayList<Blinker>();
     public double lightMergeRadius = 2.61;
-    public double lightMergeDistance = 10;
     public double light_merge_threshold;
     public int frameNumber = 0;
 
@@ -128,7 +127,7 @@ public class LightPostProcessor {
             boolean anyInRange = false;
             int bestIdx = 0;
             int k = 0;
-            double mincost = lightMergeDistance;
+            double mincost = Settings.getMergeDistance();
 
             //loop over previously seen blinkers, set position and last seen time if close enough
             for (Blinker p : blinkers)
