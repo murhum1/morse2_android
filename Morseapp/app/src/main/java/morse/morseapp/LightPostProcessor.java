@@ -183,7 +183,7 @@ public class LightPostProcessor {
             }
         }
         long currentTime = System.currentTimeMillis();
-        float deltaTime = 1000.0f / Settings.getCharsPerSecond();
+        float deltaTime = 1000.0f / Settings.getFrequency();
 
         // discard blinkers that have not been seen in a while, and removed blinkers
         ArrayList<Blinker> new_blinkers = new ArrayList<Blinker>();

@@ -82,9 +82,9 @@ public class CameraFragment extends Fragment implements Torch {
     }
 
     /**
-     * Manual exposure time in nanoseconds.
+     * Fraction of a second to expose for. (only for manual exposure of course)
      */
-    private static final long PREFERRED_MANUAL_EXPOSURE_TIME = 1000000000 / 300;
+    private static int EXPOSURE_FRACTION = 300;
 
     /**
      * Preferred size for the imageReader
@@ -659,7 +659,7 @@ public class CameraFragment extends Fragment implements Torch {
                                 mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE,
                                         CaptureRequest.FLASH_MODE_OFF);
 
-                                if (null == mExposureTimeRange || Settings.autoExposure()) {
+                                if (null == mExposureTimeRange || Settings.getAutoExposure()) {
                                     // auto-exposure on.
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                                             CaptureRequest.CONTROL_AE_MODE_ON);
@@ -667,7 +667,10 @@ public class CameraFragment extends Fragment implements Torch {
                                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                                             CaptureRequest.CONTROL_AE_MODE_OFF);
 
-                                    mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, mExposureTimeRange.clamp(PREFERRED_MANUAL_EXPOSURE_TIME));
+                                    int fraction = Settings.getExposureFraction();
+                                    long exposureTime = mExposureTimeRange.clamp(1000000000L / fraction);
+
+                                    mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, mExposureTimeRange.clamp(exposureTime));
                                     //mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME);
                                 }
 

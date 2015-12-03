@@ -22,23 +22,30 @@ public class Settings {
 
     /** the different settings */
 
-    private static Integer charsPerSecond; // how many chars per second to send with the app
-    private static final String CHARS_PER_SECOND_KEY = "chars_per_second";
-
+    // alphabet
     private static Alphabet currentAlphabet;
     private static final String ALPHABET_KEY = "alphabet";
 
+    // exposure settings
     private static Boolean autoExpose;
     private static final String EXPOSURE_KEY = "exposure";
+    private static Integer exposureFraction;
+    private static final String EXPOSURE_FRACTION_KEY = "exposure_fraction";
 
+    private static boolean supportsManualExposure = false;
+
+    // the send / receive frequency
+    private static Integer frequency;
+    private static final String FREQUENCY_KEY = "frequency";
+
+    // detection settings
     private static Float sensitivity;
     private static final String SENSITIVITY_KEY = "sensitivity";
     private static Integer merge_distance;
     private static final String MERGE_DISTANCE_KEY = "merge_distance";
     private static Float cutoff_input;
-    private static final String CUTOFF_INPUT_KEY = "cutoff_input";
 
-    private static boolean supportsManualExposure = false;
+    private static final String CUTOFF_INPUT_KEY = "cutoff_input";
 
     /** getters and setters for settings */
 
@@ -49,19 +56,18 @@ public class Settings {
 
     }
 
-    public static Integer getCharsPerSecond() {
-        if (charsPerSecond == null) {
-            Integer chars = sharedPrefs(context).getInt(CHARS_PER_SECOND_KEY, 0);
-            if (chars == 0) charsPerSecond = 5;
-            else charsPerSecond = chars;
+    public static int getFrequency() {
+        if (frequency == null) {
+            int f = sharedPrefs(context).getInt(FREQUENCY_KEY, 10);
+            frequency = f;
         }
 
-        return charsPerSecond;
+        return frequency;
     }
 
-    public static void setCharsPerSecond(Integer charsPerSecond) {
-        Settings.charsPerSecond = charsPerSecond;
-        save(context, CHARS_PER_SECOND_KEY, charsPerSecond);
+    public static void setFrequency(int frequency) {
+        Settings.frequency = frequency;
+        save(context, FREQUENCY_KEY, frequency);
     }
 
     public static Alphabet getAlphabet() {
@@ -85,7 +91,7 @@ public class Settings {
     }
 
 
-    public static boolean autoExposure() {
+    public static boolean getAutoExposure() {
         if (autoExpose == null) {
             autoExpose = sharedPrefs(context).getBoolean(EXPOSURE_KEY, true);
         }
@@ -96,6 +102,19 @@ public class Settings {
     public static void setAutoExposure(boolean autoExpose) {
         Settings.autoExpose = autoExpose;
         save(context, EXPOSURE_KEY, Settings.autoExpose);
+    }
+
+    public static void setExposureFraction(int fraction) {
+        Settings.exposureFraction = fraction;
+        save(context, EXPOSURE_FRACTION_KEY, Settings.exposureFraction);
+    }
+
+    public static int getExposureFraction() {
+        if (exposureFraction == null) {
+            int fraction = sharedPrefs(context).getInt(EXPOSURE_FRACTION_KEY, 300);
+            Settings.exposureFraction = fraction;
+        }
+        return exposureFraction;
     }
 
     public static void setSensitivity(Float s) {

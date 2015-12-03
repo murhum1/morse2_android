@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/row_height"
             android:layout_alignParentBottom="true"
-            android:background="#6000">
+            android:background="#8000">
 
             <ImageButton
                 android:id="@+id/button_send_message"
@@ -43,11 +43,12 @@
                 android:paddingBottom="6dp"
                 android:paddingLeft="6dp"
                 android:paddingTop="6dp"
+                android:textColor="#FFF"
                 android:paddingRight="6dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginLeft="8dp"
-                android:background="#2FFF"
+                android:background="#3FFF"
                 />
         </RelativeLayout>
 

@@ -1,241 +1,267 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/spacing_small"
     android:paddingLeft="@dimen/spacing_normal"
     android:paddingRight="@dimen/spacing_normal"
-    android:paddingBottom="@dimen/spacing_small"
-    android:paddingTop="@dimen/spacing_small"
-    >
+    android:paddingTop="@dimen/spacing_small">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <TextView
-            style="@style/AppTheme.SettingsTitle"
-            android:id="@+id/send_speed"
-            android:text="Send speed"
-            />
-
-        <LinearLayout
-            android:id="@+id/chars_per_second"
-            android:layout_below="@id/send_speed"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            >
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="@dimen/row_height"
-                android:layout_weight="0.25"
-                android:padding="@dimen/spacing_small"
-                android:text="Units / s"
-                />
-
-            <LinearLayout
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:layout_width="0px"
-                android:layout_height="0px"/>
-
-            <!-- :nextFocusUp and :nextFocusLeft have been set to the id of this component
-            to prevent the dummy from receiving focus again -->
-
-            <EditText
-                android:id="@+id/edit_text_chars_per_second"
-                android:layout_width="0dp"
-                android:layout_weight="0.75"
-                android:layout_height="@dimen/row_height"
-                android:padding="@dimen/spacing_small"
-                android:inputType="number"
-                android:text="5"
-                android:nextFocusUp="@+id/edit_text_chars_per_second"
-                android:nextFocusLeft="@+id/edit_text_chars_per_second"/>
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/note_text_view"
-            android:layout_below="@id/chars_per_second"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_normal"
             android:layout_marginBottom="@dimen/spacing_normal"
-            android:background="#77000000"
-            android:textColor="@android:color/white"
-            android:padding="14dp"
-            android:text="Note: Camera might not be able to handle many flashes / second"
-            />
+            android:layout_marginTop="@dimen/spacing_normal"
+            android:layout_marginRight="15dp"
+            android:layout_marginLeft="15dp"
+            android:padding="5dp"
+            android:text="All values are automatically saved upon leaving this window."
+            android:textColor="@android:color/white" />
 
         <TextView
             style="@style/AppTheme.SettingsTitle"
-            android:id="@+id/alphabet_title"
-            android:text="Alphabet"
-            android:layout_below="@id/note_text_view"
-            />
+            android:text="Alphabet" />
 
         <RadioGroup
             android:id="@+id/radio_group_alphabet"
-            android:layout_below="@id/alphabet_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="@dimen/spacing_small"
             android:layout_marginTop="@dimen/spacing_normal"
-            >
+            android:padding="@dimen/spacing_small">
 
             <RadioButton
                 android:id="@+id/radio_button_bit_alphabet"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Use custom bit alphabet"
+                android:checked="true"
                 android:enabled="true"
-                android:checked="true" />
+                android:text="Use custom bit alphabet" />
 
             <RadioButton
                 android:id="@+id/radio_button_international_morse"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Use international morse"
-                android:enabled="true" />
+                android:enabled="true"
+                android:text="Use international morse" />
         </RadioGroup>
 
         <TextView
             style="@style/AppTheme.SettingsTitle"
-            android:id="@+id/exposure_title"
-            android:text="Exposure"
-            android:layout_below="@id/radio_group_alphabet"
-            />
+            android:text="Exposure" />
 
         <RadioGroup
             android:id="@+id/radio_group_exposure"
-            android:layout_below="@id/exposure_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="@dimen/spacing_small"
             android:layout_marginTop="@dimen/spacing_normal"
-            >
+            android:padding="@dimen/spacing_small">
 
             <RadioButton
                 android:id="@+id/radio_button_exposure_auto"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Automatic exposure"
+                android:checked="true"
                 android:enabled="true"
-                android:checked="true" />
+                android:text="Automatic exposure" />
 
             <RadioButton
-                android:id="@+id/radio_button_exposure_low"
+                android:id="@+id/radio_button_manual_exposure"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Low exposure"
-                android:enabled="true" />
+                android:enabled="true"
+                android:text="Manual exposure" />
         </RadioGroup>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/exposure_time_title_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="left"
+                android:text="Exposure time" />
+
+            <TextView
+                android:id="@+id/exposure_time_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:text="0/0" />
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/exposure_fraction_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:max="9" />
+
         <TextView
-            style="@style/AppTheme.SettingsTitle"
             android:id="@+id/detectionSettings_title"
-            android:text="Detection settings"
-            android:layout_below="@id/radio_group_exposure"
-            />
+            style="@style/AppTheme.SettingsTitle"
+            android:text="Detection settings" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/detectionSettings_title"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="10dp">
 
             <LinearLayout
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_margin="5dp"
                 android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/sensitivity"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="left"
-                    android:text="Sensitivity"
-                    />
+                    android:text="Sensitivity" />
+
                 <TextView
                     android:id="@+id/sensitivityValue"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="right"
-                    android:text="0/0"
-                    />
+                    android:text="0/0" />
             </LinearLayout>
+
             <SeekBar
                 android:id="@+id/sensitivityBar"
-                android:layout_width="300dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="10" />
 
             <LinearLayout
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_margin="5dp"
                 android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/merge_distance"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="left"
-                    android:text="Merge distance"
-                    />
+                    android:text="Merge distance" />
+
                 <TextView
                     android:id="@+id/merge_distanceValue"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="right"
-                    android:text="0/0"
-                    />
+                    android:text="0/0" />
             </LinearLayout>
+
             <SeekBar
                 android:id="@+id/merge_distanceBar"
-                android:layout_width="300dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="20"
-                />
+                android:max="20" />
 
             <LinearLayout
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_margin="5dp"
                 android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/cutoff_input"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="left"
-                    android:text="Shadow cutoff"
-                    />
+                    android:text="Shadow cutoff" />
+
                 <TextView
                     android:id="@+id/cutoff_inputValue"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="right"
-                    android:text="0/0"
-                    />
+                    android:text="0/0" />
             </LinearLayout>
+
             <SeekBar
                 android:id="@+id/cutoff_inputBar"
-                android:layout_width="300dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="10" />
 
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/send_speed"
+            style="@style/AppTheme.SettingsTitle"
+            android:text="Frequency" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="5dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="left"
+                android:text="send / receive freq." />
+
+            <TextView
+                android:id="@+id/frequency_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:text="0 units/s" />
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/frequency_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:max="29" />
+
+        <TextView
+            android:id="@+id/note_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_normal"
+            android:layout_marginTop="@dimen/spacing_normal"
+            android:layout_marginRight="15dp"
+            android:layout_marginLeft="15dp"
+            android:background="#5000"
+            android:padding="14dp"
+            android:text="Frequency note: Camera might not be able to handle many flashes / second"
+            android:textColor="@android:color/white" />
     </LinearLayout>
-
-
 
 
 </ScrollView>

@@ -59,7 +59,7 @@ public class Sender {
         if (sending) return;
 
         iterator = Encoder.encode(message, alphabet).iterator();
-        unitLength = 1000 / Settings.getCharsPerSecond();
+        unitLength = 1000 / Settings.getFrequency();
         sending = true;
 
         handler.postDelayed(flasher, 0);
