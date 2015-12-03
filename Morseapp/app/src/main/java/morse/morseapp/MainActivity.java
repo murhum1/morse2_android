@@ -15,10 +15,8 @@ import android.widget.TextView;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 import morse.morseapp.message.Alphabet;
-import morse.morseapp.message.Encoder;
 import morse.morseapp.message.Sender;
 import morse.morseapp.utilities.Settings;
 
@@ -28,7 +26,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
     private CameraFragment mCameraFragment;
     private TextView mSendTextView;
     private LightPostProcessor lightProcessor = new LightPostProcessor();
-    private Encoder mEncoder;
+    private boolean debugMode = false;
+    private int realLettersThreshold = 0;
+    private float sensitivity, cutoffInput;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +59,29 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         findViewById(R.id.button_open_settings).setOnClickListener(this);
         findViewById(R.id.button_send_message).setOnClickListener(this);
 
+        pullSettings();
+
         // set image processing listener
         mCameraFragment.setOnImageAvailableListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        pullSettings();
+    }
+
+    private void pullSettings() {
+        debugMode = Settings.getViewMode() == Settings.DEBUG;
+
+        if (debugMode) {
+            realLettersThreshold = 0;
+        } else {
+            realLettersThreshold = Settings.REAL_LETTER_THRESHOLD;
+        }
+
+        sensitivity = Settings.getSensitivity();
+        cutoffInput = Settings.getCutoffInput();
     }
 
     @Override
@@ -108,8 +129,6 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         next.close();
     }
 
-    boolean debugVarRects = false;
-
     private void processImage(Image img) {
         int size = img.getHeight() * img.getWidth();
         byte[] Y = new byte[size];
@@ -117,23 +136,32 @@ public class MainActivity extends Activity implements View.OnClickListener, Imag
         ByteBuffer plane0 = img.getPlanes()[0].getBuffer();
         plane0.get(Y);
 
-        int[] lights = getLights(Y, img.getWidth(), img.getHeight(), (float) Settings.getSensitivity(), (float) Settings.getCutoffInput());
+        int[] lights = getLights(Y, img.getWidth(), img.getHeight(), sensitivity, cutoffInput);
 
-        Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
+        // Log.d("PROCESS", "Frame: " + lightProcessor.frameNumber + " ,found: " + (lightProcessor.blinkers.size()));
         int w = img.getWidth();
         int h = img.getHeight();
 
         /* we add one rectangle that covers the Image fully. */
         ArrayList<Rect> rects = new ArrayList<>();
         ArrayList<DrawText> texts = new ArrayList<>();
-        rects.add(new Rect(0, 0, w, h));
+
+        if (debugMode)
+            rects.add(new Rect(0, 0, w, h));
 
         lightProcessor.ProcessLights(lights); // Run light postprocess, merging found lights to previously seen blinkers
 
         for(LightPostProcessor.Blinker b : lightProcessor.blinkers) {
-            rects.add(new Rect((int)b.x, (int)b.y, (int)(b.x+b.size), (int)(b.y+b.size)));
-            if(b.history.size() > 5)
-                texts.add(b.TranslateText(mEncoder, Alphabet.INTERNATIONAL_MORSE));
+            DrawText drawText = null;
+            if(b.history.size() > 5) {
+                drawText = b.TranslateText(Alphabet.INTERNATIONAL_MORSE, realLettersThreshold);
+                if (null != drawText) {
+                    texts.add(drawText);
+                }
+            }
+
+            if (debugMode || null != drawText)
+                rects.add(new Rect((int)b.x, (int)b.y, (int)(b.x+b.size), (int)(b.y+b.size)));
         }
 
         mCameraFragment.setDrawnRectangleColor(Color.RED);

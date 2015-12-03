@@ -80,7 +80,6 @@ public class DrawRectanglesView extends View {
         }
         if (null != mDrawTexts) {
             for(DrawText tx : mDrawTexts) {
-                canvas.drawText("TEST-------------------------------------------", (float)50, (float)50, mPaint);
                 canvas.drawText(tx.str, (float) tx.x, (float) tx.y, mPaint);
             }
         }

@@ -25,40 +25,12 @@
 
         <TextView
             style="@style/AppTheme.SettingsTitle"
-            android:text="Alphabet" />
-
-        <RadioGroup
-            android:id="@+id/radio_group_alphabet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_normal"
-            android:padding="@dimen/spacing_small">
-
-            <RadioButton
-                android:id="@+id/radio_button_bit_alphabet"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:enabled="true"
-                android:text="Use custom bit alphabet" />
-
-            <RadioButton
-                android:id="@+id/radio_button_international_morse"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:enabled="true"
-                android:text="Use international morse" />
-        </RadioGroup>
-
-        <TextView
-            style="@style/AppTheme.SettingsTitle"
             android:text="Exposure" />
 
         <RadioGroup
             android:id="@+id/radio_group_exposure"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_normal"
             android:padding="@dimen/spacing_small">
 
             <RadioButton
@@ -110,6 +82,32 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:max="9" />
+
+        <TextView
+            style="@style/AppTheme.SettingsTitle"
+            android:text="View mode" />
+
+        <RadioGroup
+            android:id="@+id/radio_group_view_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_small">
+
+            <RadioButton
+                android:id="@+id/radio_button_view_mode_debug"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:enabled="true"
+                android:text="Debug mode (more false messages)" />
+
+            <RadioButton
+                android:id="@+id/radio_button_view_mode_user"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="true"
+                android:text="User mode" />
+        </RadioGroup>
 
         <TextView
             android:id="@+id/detectionSettings_title"
@@ -261,7 +259,32 @@
             android:padding="14dp"
             android:text="Frequency note: Camera might not be able to handle many flashes / second"
             android:textColor="@android:color/white" />
+
+        <TextView
+            style="@style/AppTheme.SettingsTitle"
+            android:text="Sender Alphabet" />
+
+        <RadioGroup
+            android:id="@+id/radio_group_alphabet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/spacing_small">
+
+            <RadioButton
+                android:id="@+id/radio_button_bit_alphabet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:enabled="true"
+                android:text="Custom bit alphabet" />
+
+            <RadioButton
+                android:id="@+id/radio_button_international_morse"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="true"
+                android:text="International Morse"
+                android:checked="true" />
+        </RadioGroup>
     </LinearLayout>
-
-
 </ScrollView>

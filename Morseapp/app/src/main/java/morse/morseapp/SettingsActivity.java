@@ -14,7 +14,7 @@ import morse.morseapp.utilities.Settings;
  * Activity for managing settings of this app.
  */
 public class SettingsActivity extends Activity implements OnSeekBarChangeListener, RadioGroup.OnCheckedChangeListener {
-    private RadioGroup radioGroupAlphabet, radioGroupExposure;
+    private RadioGroup radioGroupAlphabet, radioGroupExposure, radioGroupViewMode;
     private TextView sensitivityText, merge_distanceText, cutoff_inputText, exposureFractionText, frequencyText;
     private float sensitivity, cutoff_input;
     private int merge_distance, frequency, exposureFraction;
@@ -31,6 +31,7 @@ public class SettingsActivity extends Activity implements OnSeekBarChangeListene
 
         radioGroupAlphabet = (RadioGroup) findViewById(R.id.radio_group_alphabet);
         radioGroupExposure = (RadioGroup) findViewById(R.id.radio_group_exposure);
+        radioGroupViewMode = (RadioGroup) findViewById(R.id.radio_group_view_mode);
 
         sensitivityText = (TextView) findViewById(R.id.sensitivityValue);
         merge_distanceText = (TextView) findViewById(R.id.merge_distanceValue);
@@ -61,6 +62,13 @@ public class SettingsActivity extends Activity implements OnSeekBarChangeListene
         cutoff_inputBar.setProgress((int) (cutoff_input * 10));
         frequencySeekBar.setProgress(frequency - 1);
         exposureSeekBar.setProgress(-(exposureFraction / 100 - 10));
+
+        radioGroupViewMode.clearCheck();
+        if (Settings.getViewMode() == Settings.DEBUG) {
+            radioGroupViewMode.check(R.id.radio_button_view_mode_debug);
+        } else {
+            radioGroupViewMode.check(R.id.radio_button_view_mode_user);
+        }
 
         /** assign saved value to view for the radio group! */
         radioGroupAlphabet.clearCheck();
@@ -138,6 +146,9 @@ public class SettingsActivity extends Activity implements OnSeekBarChangeListene
 
         boolean autoExposure = radioGroupExposure.getCheckedRadioButtonId() == R.id.radio_button_exposure_auto;
         Settings.setAutoExposure(autoExposure);
+
+        boolean viewModeDebug = radioGroupViewMode.getCheckedRadioButtonId() == R.id.radio_button_view_mode_debug;
+        Settings.setViewMode((viewModeDebug) ? Settings.DEBUG : Settings.USER);
 
         Settings.setSensitivity(sensitivity);
         Settings.setMergeDistance(merge_distance);

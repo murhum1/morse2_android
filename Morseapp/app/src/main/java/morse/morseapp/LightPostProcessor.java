@@ -77,19 +77,30 @@ public class LightPostProcessor {
             return Math.sqrt(xdist*xdist + ydist*ydist);
         }
 
-        public DrawText TranslateText(Encoder encoder, Alphabet alphabet) {
-            String message = "";
+        public DrawText TranslateText(Alphabet alphabet, int realLetterThreshHold) {
+            StringBuilder builder = new StringBuilder("");
             String[] letters = morse.split(" ");
             int letterIdx = 0;
             while(true) {
-                if(letterIdx >= letters.length)
+                if(letterIdx >= letters.length) {
                     break;
+                }
 
                 String letter = letters[letterIdx];
-                message += alphabet.getChar(letter);
+                char c = alphabet.getChar(letter);
+
+                if (realLetterThreshHold > 0 && letterIdx < realLetterThreshHold && c == '*')
+                    return null;
+
+                builder.append(alphabet.getChar(letter));
                 letterIdx++;
             }
-            return new DrawText((int)x, (int)y, message);
+
+            if (realLetterThreshHold > 0 && letterIdx < realLetterThreshHold) {
+                return null;
+            }
+
+            return new DrawText((int)x, (int)y, builder.toString());
         }
     }
 

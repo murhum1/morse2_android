@@ -20,6 +20,10 @@ public class Settings {
     private static final String PREF_KEY = "morse.morseapp.SHARED_PREFERENCES";
     private static Context context;
 
+    // in the user mode, a reception needs to have at least this many real letters (not *) at the start
+    // to be shown at all to the user.
+    public static final int REAL_LETTER_THRESHOLD = 3;
+
     /** the different settings */
 
     // alphabet
@@ -37,6 +41,12 @@ public class Settings {
     // the send / receive frequency
     private static Integer frequency;
     private static final String FREQUENCY_KEY = "frequency";
+
+    // view mode
+    private static Integer viewMode;
+    private static final String VIEW_MODE_KEY = "view_mode";
+    public static final int DEBUG = 0;
+    public static final int USER = 1;
 
     // detection settings
     private static Float sensitivity;
@@ -88,6 +98,22 @@ public class Settings {
     public static void setAlphabet(Alphabet alphabet) {
         Settings.currentAlphabet = alphabet;
         save(context, ALPHABET_KEY, alphabet.name());
+    }
+
+    public static void setViewMode(int viewMode) {
+        if (viewMode == DEBUG || viewMode == USER) {
+            Settings.viewMode = viewMode;
+            save(context, VIEW_MODE_KEY, viewMode);
+        }
+    }
+
+    public static int getViewMode() {
+        if (Settings.viewMode == null) {
+            int mode = sharedPrefs(context).getInt(VIEW_MODE_KEY, USER);
+            Settings.viewMode = mode;
+        }
+
+        return Settings.viewMode;
     }
 
 
